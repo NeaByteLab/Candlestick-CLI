@@ -4,16 +4,14 @@ import { InfoBar } from '@/chart/info-bar'
 import { VolumePane } from '@/chart/volume-pane'
 import { YAxis } from '@/chart/y-axis'
 import { ChartRenderError, ConfigurationError } from '@/types/errors'
-import {
-  validateCandles,
-  validateRGBColor,
-  validateChartDimensions,
-  validateMargins,
-  validateTimeRange
-} from '@/utils/validation'
+import { validateCandles, validateRGBColor, validateChartDimensions } from '@/utils/validation'
 import type { Candles, ChartHighlights, ColorValue } from '@/types/candlestick'
 
-const UNKNOWN_ERROR = 'Unknown error'
+const UNKNOWN_ERROR_MESSAGE = 'Unknown error'
+const AUTO_RESIZE_INITIAL_DELAY = 100
+
+// Node.js global declarations
+declare const setTimeout: (callback: () => void, delay: number) => number
 
 /**
  * Main Chart class for rendering candlestick charts
@@ -30,7 +28,7 @@ const UNKNOWN_ERROR = 'Unknown error'
  * const chart = new Chart(candles, { title: 'BTC/USDT', width: 120, height: 30 })
  * chart.setBearColor(255, 0, 0)    // Custom red for bearish candles
  * chart.setBullColor(0, 255, 0)    // Custom green for bullish candles
- * chart.draw()                      // Render to console
+ * chart.draw()                     // Render to console
  * ```
  */
 export class Chart {
@@ -89,7 +87,7 @@ export class Chart {
       if (error instanceof ChartRenderError || error instanceof ConfigurationError) {
         throw error
       }
-      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
+      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE
       throw new ChartRenderError(`Failed to initialize chart: ${errorMessage}`)
     }
   }
@@ -99,17 +97,18 @@ export class Chart {
    *
    * Renders the complete chart to a string representation ready for output.
    * This is the core rendering method that orchestrates all chart components.
+   * Supports true auto-sizing like TradingView with async rendering.
    *
-   * @returns Complete chart string with all components rendered
+   * @returns Promise that resolves to complete chart string with all components rendered
    *
    * @example
    * ```typescript
-   * const chartString = chart.render()
+   * const chartString = await chart.render()
    * // Use chartString for output or further processing
    * ```
    */
-  private render(): string {
-    return this.renderer.render(this)
+  async render(): Promise<string> {
+    return await this.renderer.render(this)
   }
 
   /**
@@ -117,20 +116,26 @@ export class Chart {
    *
    * Renders the complete chart and outputs it to the console using console.log.
    * This is the primary method for displaying charts in terminal environments.
+   * Supports true auto-sizing like TradingView with async rendering.
    *
    * @throws ChartRenderError if rendering fails
    *
    * @example
    * ```typescript
-   * chart.draw() // Outputs chart to console
+   * await chart.draw() // Outputs chart to console with auto-sizing
    * ```
    */
-  draw(): void {
+  async draw(): Promise<void> {
     try {
-      const chartString = this.render()
-      globalThis.console.log(chartString)
+      const chartString = await this.render()
+      if (typeof globalThis.process !== 'undefined' && globalThis.process.stdout) {
+        globalThis.process.stdout.write(`${chartString}\n`)
+        globalThis.process.stdout.write('')
+      } else {
+        globalThis.console.log(chartString)
+      }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
+      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE
       throw new ChartRenderError(`Failed to draw chart: ${errorMessage}`)
     }
   }
@@ -156,7 +161,7 @@ export class Chart {
       validateRGBColor(r, g, b)
       this.renderer.bearishColor = [r, g, b]
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
+      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE
       throw new ConfigurationError(`Invalid bear color: ${errorMessage}`, 'bearColor')
     }
   }
@@ -182,28 +187,9 @@ export class Chart {
       validateRGBColor(r, g, b)
       this.renderer.bullishColor = [r, g, b]
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
+      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE
       throw new ConfigurationError(`Invalid bull color: ${errorMessage}`, 'bullColor')
     }
-  }
-
-  /**
-   * Set info bar label
-   *
-   * Configures custom labels for the information bar display. Allows
-   * customization of the statistics shown in the chart footer.
-   *
-   * @param label - Label name to configure
-   * @param value - Label value (empty string to hide)
-   *
-   * @example
-   * ```typescript
-   * chart.setLabel('custom', 'Custom Value')
-   * chart.setLabel('volume', '') // Hide volume label
-   * ```
-   */
-  setLabel(label: string, value: string): void {
-    ;(this.infoBar.labels as unknown as Record<string, string>)[label] = value
   }
 
   /**
@@ -319,23 +305,6 @@ export class Chart {
   }
 
   /**
-   * Set volume pane unicode fill character
-   *
-   * Configures the Unicode character used to fill volume bars in the volume pane.
-   * Allows customization of the volume bar appearance.
-   *
-   * @param unicodeFill - Unicode character for volume bars
-   *
-   * @example
-   * ```typescript
-   * chart.setVolumePaneUnicodeFill('█') // Solid block for volume bars
-   * ```
-   */
-  setVolumePaneUnicodeFill(unicodeFill: string): void {
-    this.volumePane.unicodeFill = unicodeFill
-  }
-
-  /**
    * Update candles in the chart
    *
    * Adds new candles to the chart or replaces existing ones. Supports
@@ -404,6 +373,7 @@ export class Chart {
    *
    * Configures the chart to automatically resize when the terminal dimensions change.
    * Implements both event-based and interval-based resizing for maximum compatibility.
+   * Provides proper cleanup and error handling for robust auto-resizing.
    *
    * @param interval - Check interval in milliseconds (default: 1000ms)
    *
@@ -417,21 +387,27 @@ export class Chart {
       globalThis.console.warn('Auto-resize not available in this environment')
       return
     }
-    const resizeHandler = (): void => {
-      this.updateSizeFromTerminal()
+    this.disableAutoResize()
+    const resizeHandler = async (): Promise<void> => {
+      try {
+        this.updateSizeFromTerminal()
+        await this.draw()
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE
+        globalThis.console.error(`Auto-resize error: ${errorMessage}`)
+      }
     }
     if (globalThis.process.stdout.on) {
       globalThis.process.stdout.on('resize', resizeHandler)
     }
-    const intervalId = globalThis.setInterval(() => {
-      this.updateSizeFromTerminal()
-    }, interval)
+    const intervalId = globalThis.setInterval(resizeHandler, interval)
     this._cleanupAutoResize = (): void => {
       if (globalThis.process.stdout.off) {
         globalThis.process.stdout.off('resize', resizeHandler)
       }
       globalThis.clearInterval(intervalId)
     }
+    setTimeout(() => resizeHandler(), AUTO_RESIZE_INITIAL_DELAY)
   }
 
   /**
@@ -471,10 +447,9 @@ export class Chart {
    */
   setMargins(top: number = 3, right: number = 4, bottom: number = 2, left: number = 0): void {
     try {
-      validateMargins(top, right, bottom, left)
       this.chartData.setMargins(top, right, bottom, left)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
+      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE
       throw new ConfigurationError(`Invalid margins: ${errorMessage}`, 'margins')
     }
   }
@@ -534,11 +509,9 @@ export class Chart {
    */
   setTimeRange(startIndex: number, endIndex: number): void {
     try {
-      const maxLength = this.chartData.mainCandleSet.candles.length
-      validateTimeRange(startIndex, endIndex, maxLength)
       this.chartData.setTimeRange(startIndex, endIndex)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
+      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR_MESSAGE
       throw new ConfigurationError(`Invalid time range: ${errorMessage}`, 'timeRange')
     }
   }

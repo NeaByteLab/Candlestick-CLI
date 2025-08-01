@@ -1,12 +1,11 @@
 import type { Candles, CandleSetStats } from '@/types/candlestick'
 
 /**
- * CandleSet manages a collection of candles and computes statistics
+ * CandleSet manages candle data and computes statistics
  *
- * Provides functionality to manage a set of candlestick data and automatically
- * compute various statistics including price ranges, volume metrics, and
- * price variations. Used by the chart rendering system for data analysis.
- * Implements efficient statistical calculations and data management.
+ * Handles candle collection management and automatic statistical calculations.
+ * Provides price ranges, volume metrics, and price variation analysis.
+ * Used by chart rendering system for data processing and analysis.
  *
  * @example
  * ```typescript
@@ -45,8 +44,8 @@ export class CandleSet {
   /**
    * Initialize CandleSet with candle data
    *
-   * Creates a new CandleSet instance and automatically computes all statistics
-   * from the provided candle data. Handles empty datasets gracefully.
+   * Creates a new CandleSet instance and computes all statistics from the provided data.
+   * Handles empty datasets gracefully by resetting all statistics to zero.
    *
    * @param candles - Array of candle data to initialize with
    *
@@ -65,8 +64,7 @@ export class CandleSet {
    * Add candles to the set
    *
    * Appends new candles to the existing collection and recomputes all statistics.
-   * This method is useful for streaming data or incremental updates.
-   * Maintains data integrity and updates all computed metrics.
+   * Useful for streaming data or incremental updates. Maintains data integrity.
    *
    * @param newCandles - Array of candles to add to the set
    *
@@ -84,9 +82,8 @@ export class CandleSet {
   /**
    * Set candles and recompute statistics
    *
-   * Replaces the entire candle collection with new data and recomputes all
-   * statistics. This method is typically used when updating the entire dataset.
-   * Resets all computed metrics and recalculates from scratch.
+   * Replaces the entire candle collection with new data and recomputes all statistics.
+   * Used when updating the complete dataset. Resets all computed metrics.
    *
    * @param newCandles - New array of candles to replace the current set
    *
@@ -104,15 +101,9 @@ export class CandleSet {
   /**
    * Compute all statistics from candles
    *
-   * Calculates comprehensive statistics from the current candle collection:
-   * - Price ranges (min/max)
-   * - Volume statistics (min/max/cumulative)
-   * - Price variation percentage
-   * - Average price
-   * - Last price
-   *
-   * This method is called automatically when candles are added or updated.
-   * Handles edge cases like empty datasets and missing volume data.
+   * Calculates comprehensive statistics from the current candle collection.
+   * Includes price ranges, volume statistics, price variation, average price, and last price.
+   * Called automatically when candles are added or updated.
    *
    * @example
    * ```typescript
@@ -149,7 +140,6 @@ export class CandleSet {
    *
    * Clears all computed statistics and sets them to default values.
    * Called when the candle collection is empty or needs to be reset.
-   * Ensures consistent state when no data is available.
    *
    * @example
    * ```typescript
@@ -170,9 +160,8 @@ export class CandleSet {
   /**
    * Get statistics as a structured object
    *
-   * Returns a comprehensive statistics object containing all computed metrics
-   * from the candle collection. This is the primary interface for accessing
-   * chart statistics and is used by the rendering system.
+   * Returns a comprehensive statistics object containing all computed metrics.
+   * Primary interface for accessing chart statistics used by the rendering system.
    *
    * @returns Object containing all candle set statistics
    *

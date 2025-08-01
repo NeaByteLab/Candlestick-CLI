@@ -27,6 +27,38 @@ candlestick-cli -f data.json -t "ETH/USDT"
 candlestick-cli -f data.json -t "ETH/USDT" --bear-color "#ff6b6b" --bull-color "#51cf66"
 ```
 
+## 🌐 Live Market Data Examples
+
+### 1. 📈 Basic Live Chart
+
+```bash
+# Live BTC/USDT data
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200
+
+# Live ETH/USDT data
+candlestick-cli -s ETH/USDT --timeframe 1h --limit 100
+```
+
+### 2. 🏭 Perpetual Futures
+
+```bash
+# Perpetual futures trading
+candlestick-cli -s BTC/USDT:USDT --timeframe 4h --limit 150
+
+# ETH perpetual futures
+candlestick-cli -s ETH/USDT:USDT --timeframe 1h --limit 100
+```
+
+### 3. 🔄 Watch Mode
+
+```bash
+# Watch mode with 30-second updates
+candlestick-cli -s BTC/USDT --watch --interval 30
+
+# Watch mode with custom interval
+candlestick-cli -s ETH/USDT --watch --interval 10 --limit 50
+```
+
 ## 🎨 Color Customization Examples
 
 ### 1. 🔴 Red and Green Theme
@@ -70,10 +102,35 @@ candlestick-cli -f data.csv --no-volume
 
 ```bash
 # Taller volume pane
-candlestick-cli -f data.csv --volume-height 8
+candlestick-cli -f data.csv --volume-height 12
 
 # Shorter volume pane
-candlestick-cli -f data.csv --volume-height 3
+candlestick-cli -f data.csv --volume-height 5
+```
+
+## 📤 Export Examples
+
+### 1. 📄 Text Export
+
+```bash
+# Export to text file
+candlestick-cli -f data.csv -o chart.txt
+
+# Export live data to text
+candlestick-cli -s BTC/USDT -o chart.txt
+```
+
+### 2. 🖼️ PNG Export
+
+```bash
+# Basic PNG export
+candlestick-cli -f data.csv -o chart.png
+
+# High-quality PNG export
+candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
+
+# Dark theme PNG export
+candlestick-cli -f data.csv -o chart.png --scale 1.5 --background dark
 ```
 
 ## 📄 File Format Examples
@@ -131,300 +188,192 @@ Create a JSON file `data.json`:
 
 Display the chart:
 ```bash
-candlestick-cli -f data.json -t "JSON Data"
+candlestick-cli -f data.json -t "JSON Sample Data"
 ```
 
-## ⚙️ Complete Configuration Examples
+## 🕒 Timeframe Examples
 
-### 1. 🎯 Full Custom Configuration
+### 1. ⚡ Short-term Timeframes
 
 ```bash
-candlestick-cli \
-  -f data.csv \
-  -t "BTC/USDT 4H Chart" \
-  --width 140 \
-  --height 40 \
+# 1-minute data
+candlestick-cli -s BTC/USDT --timeframe 1m --limit 100
+
+# 5-minute data
+candlestick-cli -s BTC/USDT --timeframe 5m --limit 200
+
+# 15-minute data
+candlestick-cli -s BTC/USDT --timeframe 15m --limit 150
+```
+
+### 2. 📊 Medium-term Timeframes
+
+```bash
+# 1-hour data
+candlestick-cli -s BTC/USDT --timeframe 1h --limit 100
+
+# 4-hour data
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200
+
+# 1-day data
+candlestick-cli -s BTC/USDT --timeframe 1d --limit 50
+```
+
+### 3. 📈 Long-term Timeframes
+
+```bash
+# 1-week data
+candlestick-cli -s BTC/USDT --timeframe 1w --limit 52
+
+# 1-month data
+candlestick-cli -s BTC/USDT --timeframe 1M --limit 12
+```
+
+## 🎯 Advanced Examples
+
+### 1. 🔄 Real-time Monitoring
+
+```bash
+# Monitor BTC with 10-second updates
+candlestick-cli -s BTC/USDT --watch --interval 10 --limit 50
+
+# Monitor ETH with 1-minute updates
+candlestick-cli -s ETH/USDT --watch --interval 60 --limit 100
+```
+
+### 2. 🎨 Custom Styling
+
+```bash
+# Custom colors with live data
+candlestick-cli -s BTC/USDT --bear-color "#ff6b6b" --bull-color "#51cf66" --volume-height 10
+
+# Custom dimensions with file data
+candlestick-cli -f data.csv --width 150 --height 40 --volume-height 8
+```
+
+### 3. 📤 Export with Custom Settings
+
+```bash
+# Export live data to high-quality PNG
+candlestick-cli -s BTC/USDT -o chart.png --scale 3 --background light
+
+# Export file data to text with custom title
+candlestick-cli -f data.csv -o chart.txt -t "Custom Chart Title"
+```
+
+## 🔧 Development Examples
+
+### 1. 🛠️ Local Development
+
+```bash
+# Run from source code
+npm run candlestick-cli -f data.csv -t "Development Chart"
+
+# Run with custom options
+npm run candlestick-cli -s BTC/USDT --timeframe 4h --limit 100
+```
+
+### 2. 🧪 Testing Different Configurations
+
+```bash
+# Test auto-sizing
+npm run candlestick-cli -f data.csv --width 0 --height 0
+
+# Test custom colors
+npm run candlestick-cli -f data.csv --bear-color "255,0,0" --bull-color "0,255,0"
+
+# Test volume settings
+npm run candlestick-cli -f data.csv --volume-height 12
+```
+
+## 📊 Complete Examples
+
+### 1. 📈 Professional Trading Chart
+
+```bash
+# Full-featured trading chart
+candlestick-cli -s BTC/USDT:USDT \
+  --timeframe 4h \
+  --limit 200 \
+  --title "BTC/USDT Perpetual 4H" \
   --bear-color "#ff6b6b" \
   --bull-color "#51cf66" \
+  --volume-height 10 \
+  --width 140 \
+  --height 40
+```
+
+### 2. 🔄 Live Monitoring Dashboard
+
+```bash
+# Live monitoring with custom settings
+candlestick-cli -s ETH/USDT \
+  --watch \
+  --interval 30 \
+  --limit 100 \
+  --title "ETH/USDT Live Monitor" \
+  --bear-color "#a55eea" \
+  --bull-color "#feca57" \
   --volume-height 8
 ```
 
-### 2. ⚡ Minimal Configuration
+### 3. 📤 Export for Analysis
 
 ```bash
-candlestick-cli -f data.csv
-```
-
-### 3. 💼 Professional Trading Theme
-
-```bash
-candlestick-cli \
-  -f data.csv \
-  -t "Professional Trading Chart" \
-  --width 120 \
-  --height 30 \
-  --bear-color "#e74c3c" \
-  --bull-color "#27ae60" \
-  --volume-height 6
-```
-
-### 4. 🌙 Dark Theme Colors
-
-```bash
-candlestick-cli \
-  -f data.csv \
-  -t "Dark Theme Chart" \
-  --bear-color "#e74c3c" \
-  --bull-color "#2ecc71"
+# Export high-quality chart for analysis
+candlestick-cli -s BTC/USDT \
+  --timeframe 1d \
+  --limit 30 \
+  -o btc-daily-analysis.png \
+  --scale 2 \
+  --background light \
+  --title "BTC/USDT Daily Analysis"
 ```
 
 ## ⚠️ Error Handling Examples
 
-### 1. 📄 File Not Found
+### 1. 🔍 Invalid File Path
 
 ```bash
-# This will show an error
-candlestick-cli -f nonexistent.csv
+# Error: File not found
+candlestick-cli -f nonexistent.csv -t "Test"
+# Output: ❌ Error: File not found: nonexistent.csv
 ```
 
-Error output:
-```
-❌ Error: File not found: nonexistent.csv
-💡 Use --help for more information.
-```
-
-### 2. 📄 Invalid File Format
+### 2. 🌐 Network Issues
 
 ```bash
-# This will show an error
-candlestick-cli -f data.txt
+# Error: Network connection failed
+candlestick-cli -s BTC/USDT --timeframe 4h
+# Output: ❌ Error: Network error, please check your connection
 ```
 
-Error output:
-```
-❌ Error: Unsupported file format. Use .csv or .json files.
-💡 Use --help for more information.
-```
-
-### 3. 📊 Invalid Data
-
-If your CSV has invalid OHLC data:
-```csv
-open,high,low,close,volume,timestamp
-100,99,101,100,1000,1640995200000
-```
-
-Error output:
-```
-❌ Error: Invalid OHLC at candle 1: high (99) cannot be less than low (101)
-💡 Use --help for more information.
-```
-
-### 4. 🎨 Invalid Color Format
+### 3. 📊 Invalid Data Format
 
 ```bash
-# This will show an error
-candlestick-cli -f data.csv --bear-color "invalid"
+# Error: Invalid CSV format
+candlestick-cli -f malformed.csv -t "Test"
+# Output: ❌ Error: Invalid CSV format
 ```
 
-Error output:
-```
-❌ Error: Invalid bear color format: invalid. Use hex (#ff0000) or RGB (255,0,0) format.
-💡 Use --help for more information.
-```
+## 💡 Tips and Best Practices
 
-## ❓ Help and Information
+### 1. 📊 Data Limits
+- **Maximum candles**: 10,000 per request
+- **Recommended limit**: 1,000 for optimal performance
+- **Memory usage**: ~1MB per 1,000 candles
 
-### 1. ❓ Display Help
+### 2. 🌐 Network Optimization
+- Use appropriate timeframes for your analysis
+- Implement caching for frequent requests
+- Monitor rate limits for live data
 
-```bash
-candlestick-cli --help
-```
+### 3. 🎨 Visual Optimization
+- Use auto-sizing (`--width 0 --height 0`) for best fit
+- Customize colors for better visibility
+- Adjust volume height based on data density
 
-Output:
-```
-Candlestick-CLI - Terminal candlestick chart viewer
-
-Usage: candlestick-cli [options]
-
-Options:
-  -f, --file <path>           Path to CSV or JSON file
-  -t, --title <title>         Chart title (default: "Candlestick Chart")
-  -w, --width <number>        Chart width (0 for auto)
-  -h, --height <number>       Chart height (0 for auto)
-  --bear-color <color>        Bearish candle color (hex or RGB)
-  --bull-color <color>        Bullish candle color (hex or RGB)
-  --no-volume                 Disable volume pane
-  --volume-height <number>    Volume pane height (default: 5)
-  --help                      Show this help
-
-Examples:
-  candlestick-cli -f data.csv -t "BTC/USDT"
-  candlestick-cli -f data.json --bear-color "#ff6b6b" --bull-color "#51cf66"
-  candlestick-cli -f data.csv --no-volume --width 120 --height 30
-
-File Formats:
-  CSV: Should have columns: open,high,low,close,volume,timestamp
-  JSON: Array of objects with: open,high,low,close,volume,timestamp
-
-Limits:
-  Minimum: 5 candles, Maximum: 10,000 candles
-```
-
-## ⚡ Performance Examples
-
-### 1. 📊 Large Dataset Handling
-
-The CLI automatically handles large datasets by sampling:
-
-```bash
-# With 1000+ candles, the CLI will automatically sample
-candlestick-cli -f large_dataset.csv -t "Large Dataset"
-```
-
-### 2. 💾 Memory Optimization
-
-For very large files, consider splitting data:
-
-```bash
-# Process in chunks for large files
-head -n 1000 large_file.csv > sample.csv
-candlestick-cli -f sample.csv -t "Sample from Large Dataset"
-```
-
-## 🌍 Real-world Usage Examples
-
-### 1. 📈 Trading Analysis
-
-```bash
-# Analyze BTC/USDT 4H data
-candlestick-cli \
-  -f btc_4h_data.csv \
-  -t "BTC/USDT 4H Analysis" \
-  --width 140 \
-  --height 40 \
-  --bear-color "#e74c3c" \
-  --bull-color "#27ae60" \
-  --volume-height 8
-```
-
-### 2. 💼 Portfolio Overview
-
-```bash
-# Display portfolio performance
-candlestick-cli \
-  -f portfolio_data.csv \
-  -t "Portfolio Performance" \
-  --width 120 \
-  --height 30 \
-  --bear-color "#ff6b6b" \
-  --bull-color "#51cf66"
-```
-
-### 3. 📊 Technical Analysis
-
-```bash
-# Technical analysis chart
-candlestick-cli \
-  -f technical_data.csv \
-  -t "Technical Analysis - Support/Resistance" \
-  --width 140 \
-  --height 40 \
-  --bear-color "#e74c3c" \
-  --bull-color "#27ae60"
-```
-
-## 🔧 Script Integration Examples
-
-### 1. 🐚 Bash Script
-
-Create a script `display_chart.sh`:
-
-```bash
-#!/bin/bash
-
-# Check if file exists
-if [ ! -f "$1" ]; then
-    echo "Error: File $1 not found"
-    exit 1
-fi
-
-# Display chart
-candlestick-cli -f "$1" -t "${2:-Chart}" --width 120 --height 30
-```
-
-Usage:
-```bash
-chmod +x display_chart.sh
-./display_chart.sh data.csv "BTC/USDT"
-```
-
-### 2. 🟢 Node.js Script
-
-Create a script `chart_display.js`:
-
-```javascript
-import { exec } from 'child_process'
-import { readFileSync } from 'fs'
-
-const file = process.argv[2]
-const title = process.argv[3] || 'Chart'
-
-if (!file) {
-  console.error('Usage: node chart_display.js <file> [title]')
-  process.exit(1)
-}
-
-try {
-  // Validate file exists
-  readFileSync(file)
-  
-  // Display chart
-  const command = `candlestick-cli -f ${file} -t "${title}" --width 120 --height 30`
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Error:', error.message)
-      return
-    }
-    console.log(stdout)
-  })
-} catch (error) {
-  console.error('Error reading file:', error.message)
-}
-```
-
-Usage:
-```bash
-node chart_display.js data.csv "BTC/USDT"
-```
-
-## 🔧 Troubleshooting Examples
-
-### 1. 📄 Check File Format
-
-```bash
-# Check CSV format
-head -5 data.csv
-
-# Check JSON format
-head -20 data.json
-```
-
-### 2. ✅ Validate Data
-
-```bash
-# Check for invalid OHLC data
-awk -F',' 'NR>1 && $2<$3 {print "Invalid OHLC at line " NR ": high=" $2 " low=" $3}' data.csv
-```
-
-### 3. 🧪 Test with Sample Data
-
-```bash
-# Create sample data for testing
-echo "open,high,low,close,volume,timestamp" > test.csv
-echo "100,105,99,103,1000,1640995200000" >> test.csv
-echo "103,108,102,106,1200,1640998800000" >> test.csv
-
-# Test the CLI
-candlestick-cli -f test.csv -t "Test Chart"
-``` 
+### 4. 🔄 Watch Mode Tips
+- Use longer intervals (30+ seconds) to avoid rate limits
+- Monitor system resources during long-running sessions
+- Implement proper error handling for production use 

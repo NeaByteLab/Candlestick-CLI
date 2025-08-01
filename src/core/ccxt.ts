@@ -1,6 +1,7 @@
 import * as ccxt from 'ccxt'
 import { MarketDataError } from '@/types/errors'
 import type { MarketData } from '@/types/index'
+import type { Candles } from '@/types/candlestick'
 
 /**
  * CCXT Market Data Provider
@@ -46,12 +47,13 @@ export class CCXTProvider {
    *
    * Retrieves historical candlestick data from the configured exchange with
    * comprehensive validation and error handling. Supports all standard timeframes
-   * and automatically validates OHLC relationships.
+   * and automatically validates OHLC relationships. Returns candles with automatic
+   * type determination (bullish/bearish).
    *
    * @param symbol - Trading pair symbol (default: 'BTC/USDT')
    * @param timeframe - Time interval (default: '1h')
    * @param limit - Number of data points to fetch (default: 1000)
-   * @returns Array of market data with OHLCV values
+   * @returns Array of candles with OHLCV values and type field
    * @throws MarketDataError if fetching fails or data is invalid
    *
    * @example
@@ -60,13 +62,14 @@ export class CCXTProvider {
    * console.log(`Fetched ${data.length} candles`)
    * ```
    */
-  async fetchOHLCV(symbol: string = 'BTC/USDT', timeframe: string = '1h', limit: number = 1000): Promise<MarketData[]> {
+  async fetchOHLCV(symbol: string = 'BTC/USDT', timeframe: string = '1h', limit: number = 1000): Promise<Candles> {
     try {
       this.validateInputs(symbol, timeframe, limit)
       await this.exchange.loadMarkets()
       const ohlcv = await this.exchange.fetchOHLCV(symbol, timeframe, undefined, limit)
       this.validateOHLCVData(ohlcv, symbol, timeframe)
-      return this.processOHLCVData(ohlcv, symbol, timeframe)
+      const marketData = this.processOHLCVData(ohlcv, symbol, timeframe)
+      return this.convertToCandles(marketData)
     } catch (error) {
       this.handleFetchError(error, symbol, timeframe)
     }
@@ -183,6 +186,32 @@ export class CCXTProvider {
   }
 
   /**
+   * Convert MarketData to Candles with automatic type determination
+   *
+   * Converts market data to candle format with automatic bullish/bearish
+   * type determination based on open vs close price comparison.
+   *
+   * @param marketData - Array of market data
+   * @returns Array of candles with type field
+   *
+   * @example
+   * ```typescript
+   * const candles = this.convertToCandles(marketData)
+   * ```
+   */
+  private convertToCandles(marketData: MarketData[]): Candles {
+    return marketData.map(data => ({
+      open: data.open,
+      high: data.high,
+      low: data.low,
+      close: data.close,
+      volume: data.volume,
+      timestamp: data.timestamp,
+      type: data.open < data.close ? 1 : 0
+    }))
+  }
+
+  /**
    * Handle and categorize fetch errors
    *
    * Processes errors from data fetching operations and categorizes them
@@ -261,7 +290,7 @@ export class CCXTProvider {
    * console.log(`Fetched ${fourHourData.length} 4H candles`)
    * ```
    */
-  async fetch4H(symbol: string = 'BTC/USDT', limit: number = 500): Promise<MarketData[]> {
+  async fetch4H(symbol: string = 'BTC/USDT', limit: number = 500): Promise<Candles> {
     return this.fetchOHLCV(symbol, '4h', limit)
   }
 
@@ -273,7 +302,7 @@ export class CCXTProvider {
    *
    * @param symbol - Trading pair symbol (default: 'BTC/USDT')
    * @param limit - Number of data points to fetch (default: 200)
-   * @returns Array of 1D market data
+   * @returns Array of 1D candles with type field
    * @throws MarketDataError if fetching fails
    *
    * @example
@@ -282,7 +311,7 @@ export class CCXTProvider {
    * console.log(`Fetched ${dailyData.length} daily candles`)
    * ```
    */
-  async fetch1D(symbol: string = 'BTC/USDT', limit: number = 200): Promise<MarketData[]> {
+  async fetch1D(symbol: string = 'BTC/USDT', limit: number = 200): Promise<Candles> {
     return this.fetchOHLCV(symbol, '1d', limit)
   }
 

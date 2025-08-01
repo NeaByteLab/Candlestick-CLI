@@ -7,25 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-08-02
+
 ### Added
-- New features that will be added in the next release
+- **Export System** - Chart export functionality with multiple formats
+  - PNG image export with canvas-based rendering
+  - Text file export with optional ANSI color preservation
+  - Format detection from file extension (.png, .txt)
+  - Custom background themes (light/dark) for image export
+  - Scalable image export (1x-4x scaling factors)
+- **Modular CLI Architecture** - Complete CLI restructure
+  - Separate modules for parser, validation, data, chart, output
+  - Improved argument parsing with boolean flags
+  - Better error handling with specific error types
+  - Watch mode for live data updates with smooth UX
+- **Canvas Rendering** - High-quality image generation
+  - Direct candle drawing with proper rectangles and wicks
+  - Price labels with theme-appropriate colors
+  - Automatic dimension calculation with scaling
+  - Professional chart layout with margins and padding
+- **Auto-resize Functionality** - Dynamic terminal size detection
+  - Automatic chart resizing on terminal changes
+  - Configurable update intervals
+  - Clean event listener management
+- **Watch Mode** - Live data monitoring capabilities
+  - Real-time chart updates with configurable intervals
+  - Smooth console clearing with progress indicators
+  - Graceful error recovery with retry mechanisms
+  - Update counters and timing information
 
 ### Changed
-- Changes in existing functionality
-
-### Deprecated
-- Features that will be removed in upcoming releases
-
-### Removed
-- Features that have been removed
+- **Chart Rendering** - Improved candle sampling algorithms
+  - Python-inspired intelligent sampling for large datasets
+  - Better preservation of important data points
+  - Improved terminal width calculation
+  - Modular rendering functions for maintainability
+- **Data Processing** - Restructured data handling
+  - Improved CSV and JSON parsing with better validation
+  - Market data conversion with automatic type determination
+  - Better error messages with field-specific information
+- **Core Utilities** - Expanded utility functions
+  - Additional number formatting functions
+  - Improved color validation and conversion
+  - Better price rounding with configurable precision
+- **Type System** - Extended TypeScript definitions
+  - New export options interface
+  - Better terminal size interface documentation
+  - Improved error type definitions
 
 ### Fixed
-- Bug fixes
+- Terminal size detection edge cases
+- Color validation for hex and RGB formats
+- ANSI code handling in length calculations
+- Canvas context type safety issues
 
-### Security
-- Security vulnerability fixes
-
-## [1.0.0] - 2025-01-08
+## [1.0.0] - 2025-08-01
 
 ### Added
 - **Initial Release** - Complete candlestick chart CLI tool and library
@@ -146,7 +182,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-### [1.0.0] - Initial Release (January 8, 2025)
+### [1.1.0] - Major Feature Release (August 2, 2025)
+- Export system with PNG and TXT formats
+- Modular CLI architecture with separate modules
+- Canvas-based image rendering
+- Watch mode for live data updates
+- Auto-resize functionality
+
+### [1.0.0] - Initial Release (August 1, 2025)
 - Complete candlestick chart CLI tool and library
 - Real-time market data support via CCXT
 - Beautiful ASCII art visualization with Unicode characters

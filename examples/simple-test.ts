@@ -1,16 +1,35 @@
 import ccxt from 'ccxt'
 import { Chart } from '@/chart'
-import { fnum, roundPrice } from '@/utils'
-import { CONSTANTS } from '@/constants'
+import { fnum } from '@/utils'
 import { MarketDataError, ChartRenderError, ValidationError } from '@/types/errors'
 import { CCXTProvider } from '@core/ccxt'
 import type { Candles } from '@/types/candlestick'
+import { EXAMPLE_CONFIG } from './shared'
+
+// Global configuration
+const GLOBAL_CONFIG = {
+  // Colors (using shared constants)
+  BEAR_COLOR: EXAMPLE_CONFIG.BEAR_COLOR,
+  BULL_COLOR: EXAMPLE_CONFIG.BULL_COLOR,
+  VOL_BEAR_COLOR: EXAMPLE_CONFIG.BEAR_COLOR,
+  VOL_BULL_COLOR: EXAMPLE_CONFIG.BULL_COLOR,
+
+  // Trading settings
+  SYMBOL: 'BTC/USDT:USDT',
+  TIMEFRAME: '4h',
+  LIMIT: EXAMPLE_CONFIG.MAX_CANDLES,
+
+  // Chart settings
+  VOLUME_HEIGHT: EXAMPLE_CONFIG.VOLUME_HEIGHT,
+  MARGINS: { top: 2, right: 2, bottom: 1, left: 0 }
+} as const
 
 /**
  * Enhanced candlestick chart demonstration
  *
  * Demonstrates comprehensive usage of the Candlestick-CLI library with
  * real-time market data, multiple chart configurations, and proper error handling.
+ * Now supports perpetual futures and expanded timeframe options.
  *
  * @example
  * ```bash
@@ -43,26 +62,28 @@ async function demonstrateLiveMarketData(): Promise<void> {
     }
   })
 
-  // Fetch perpetual futures OHLCV data
-  const symbol = 'BTC/USDT:USDT'
-  const timeframe = '1h'
-  const limit = 150
+  // Fetch perpetual futures OHLCV data with global config
+  const symbol = GLOBAL_CONFIG.SYMBOL
+  const timeframe = GLOBAL_CONFIG.TIMEFRAME
+  const limit = GLOBAL_CONFIG.LIMIT
 
   console.log(`Fetching ${limit} ${timeframe} perpetual futures candles for ${symbol}...`)
 
   const ohlcv = await exchange.fetchOHLCV(symbol, timeframe, undefined, limit)
   const candles = convertToCandleFormat(ohlcv)
 
-  // Create and configure chart
+  // Create and configure chart with global settings
   const chart = new Chart(candles, {
-    title: `${symbol} ${timeframe} Auto-Resize Chart`,
-    width: 0, // Auto-detect terminal size
-    height: 0 // Auto-detect terminal size
+    title: `${symbol} ${timeframe} Auto-Resize Chart`
   })
 
+  // Apply global configuration
   configureChartColors(chart)
   configureChartHighlights(chart)
   configureChartDisplay(chart)
+
+  // Enable auto-resize for responsive behavior
+  chart.enableAutoResize()
 
   chart.draw()
 }
@@ -82,9 +103,9 @@ async function demonstrateChartConfigurations(): Promise<void> {
     }
   })
 
-  const symbol = 'BTC/USDT:USDT'
-  const timeframe = '1h'
-  const limit = 100
+  const symbol = GLOBAL_CONFIG.SYMBOL
+  const timeframe = GLOBAL_CONFIG.TIMEFRAME
+  const limit = GLOBAL_CONFIG.LIMIT
 
   const ohlcv = await exchange.fetchOHLCV(symbol, timeframe, undefined, limit)
   const candles = convertToCandleFormat(ohlcv)
@@ -92,9 +113,7 @@ async function demonstrateChartConfigurations(): Promise<void> {
   // Example 1: Fixed time range (zoom to last 50 candles)
   console.log('\n--- Fixed Time Range Chart (Last 50 candles) ---')
   const fixedRangeChart = new Chart(candles, {
-    title: `${symbol} ${timeframe} Fixed Range Chart`,
-    width: 0,
-    height: 0
+    title: `${symbol} ${timeframe} Fixed Range Chart`
   })
 
   configureChartColors(fixedRangeChart)
@@ -109,9 +128,7 @@ async function demonstrateChartConfigurations(): Promise<void> {
   // Example 2: Compact margins for space-constrained environments
   console.log('\n--- Compact Margins Chart ---')
   const compactChart = new Chart(candles, {
-    title: `${symbol} ${timeframe} Compact Chart`,
-    width: 0,
-    height: 0
+    title: `${symbol} ${timeframe} Compact Chart`
   })
 
   configureChartColors(compactChart)
@@ -126,9 +143,7 @@ async function demonstrateChartConfigurations(): Promise<void> {
   // Example 3: Price-based scaling with custom range
   console.log('\n--- Price Range Chart ---')
   const priceRangeChart = new Chart(candles, {
-    title: `${symbol} ${timeframe} Price Range Chart`,
-    width: 0,
-    height: 0
+    title: `${symbol} ${timeframe} Price Range Chart`
   })
 
   configureChartColors(priceRangeChart)
@@ -163,9 +178,10 @@ async function demonstrateAdvancedFeatures(): Promise<void> {
     }
   })
 
-  const symbol = 'ETH/USDT:USDT' // Different symbol for variety
-  const timeframe = '4h'
-  const limit = 80
+  // Create chart with different symbol for variety
+  const symbol = GLOBAL_CONFIG.SYMBOL // Use global config
+  const timeframe = GLOBAL_CONFIG.TIMEFRAME
+  const limit = GLOBAL_CONFIG.LIMIT
 
   const ohlcv = await exchange.fetchOHLCV(symbol, timeframe, undefined, limit)
   const candles = convertToCandleFormat(ohlcv)
@@ -173,9 +189,7 @@ async function demonstrateAdvancedFeatures(): Promise<void> {
   // Advanced chart with custom styling and auto-resize
   console.log('\n--- Advanced Chart with Auto-Resize ---')
   const advancedChart = new Chart(candles, {
-    title: `${symbol} ${timeframe} Advanced Chart`,
-    width: 0,
-    height: 0
+    title: `${symbol} ${timeframe} Advanced Chart`
   })
 
   // Custom color scheme
@@ -186,8 +200,7 @@ async function demonstrateAdvancedFeatures(): Promise<void> {
 
   advancedChart.setName(symbol)
   advancedChart.setVolumePaneEnabled(true)
-  advancedChart.setVolumePaneHeight(6)
-  advancedChart.setVolumePaneUnicodeFill('█') // Solid block for volume
+  advancedChart.setVolumePaneHeight(8)
   advancedChart.setMargins(3, 3, 2, 1)
 
   // Advanced highlighting
@@ -223,15 +236,13 @@ async function demonstrateCCXTProvider(): Promise<void> {
     const provider = new CCXTProvider()
 
     // Fetch data using the provider
-    const data = await provider.fetch4H('BTC/USDT', 50)
+    const data = await provider.fetch4H('BTC/USDT', 300)
     const currentPrice = await provider.getLatestPrice('BTC/USDT')
 
     console.log(`Current BTC price: $${currentPrice}`)
 
     const providerChart = new Chart(data, {
-      title: 'BTC/USDT 4H via CCXTProvider',
-      width: 0,
-      height: 0
+      title: 'BTC/USDT 4H via CCXTProvider'
     })
 
     configureChartColors(providerChart)
@@ -269,8 +280,11 @@ function convertToCandleFormat(ohlcv: unknown[]): Candles {
  * Configure standard chart colors
  */
 function configureChartColors(chart: Chart): void {
-  chart.setBearColor(234, 74, 90) // Red for bearish
-  chart.setBullColor(52, 208, 88) // Green for bullish
+  // Use global color configuration
+  chart.setBearColor(...GLOBAL_CONFIG.BEAR_COLOR)
+  chart.setBullColor(...GLOBAL_CONFIG.BULL_COLOR)
+  chart.setVolBearColor(...GLOBAL_CONFIG.VOL_BEAR_COLOR)
+  chart.setVolBullColor(...GLOBAL_CONFIG.VOL_BULL_COLOR)
 }
 
 /**
@@ -293,8 +307,13 @@ function configureChartHighlights(chart: Chart): void {
  */
 function configureChartDisplay(chart: Chart): void {
   chart.setVolumePaneEnabled(true)
-  chart.setVolumePaneHeight(5)
-  chart.setMargins(2, 2, 1, 0)
+  chart.setVolumePaneHeight(GLOBAL_CONFIG.VOLUME_HEIGHT)
+  chart.setMargins(
+    GLOBAL_CONFIG.MARGINS.top,
+    GLOBAL_CONFIG.MARGINS.right,
+    GLOBAL_CONFIG.MARGINS.bottom,
+    GLOBAL_CONFIG.MARGINS.left
+  )
   chart.setScalingMode('fit')
   chart.fitToData()
 }

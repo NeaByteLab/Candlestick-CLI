@@ -284,19 +284,16 @@ export interface ChartDimensions {
 }
 
 /**
- * Display size
+ * Terminal size interface
  *
- * Represents the current display dimensions in characters.
- * Used for responsive chart sizing.
+ * Represents the dimensions of a terminal display in characters.
+ * Used for responsive chart sizing and layout calculations.
  *
  * @example
  * ```typescript
  * import { TerminalSize } from '@/types/candlestick'
  *
- * const displaySize: TerminalSize = {
- *   width: process.stdout.columns || 80,
- *   height: process.stdout.rows || 24
- * }
+ * const terminal: TerminalSize = { width: 120, height: 30 }
  * ```
  */
 export interface TerminalSize {
@@ -304,4 +301,30 @@ export interface TerminalSize {
   width: number
   /** Display height in characters */
   height: number
+}
+
+/**
+ * Export options configuration
+ *
+ * Defines configuration options for chart export functionality.
+ * Supports both image and text export with customizable settings.
+ *
+ * @example
+ * ```typescript
+ * import { ExportOptions } from '@/types/candlestick'
+ *
+ * const options: ExportOptions = {
+ *   outputPath: 'chart.png',
+ *   background: 'dark',
+ *   scale: 2
+ * }
+ * ```
+ */
+export interface ExportOptions {
+  /** Output file path */
+  outputPath: string
+  /** Background theme for image export */
+  background?: 'light' | 'dark'
+  /** Scale factor for image export */
+  scale?: number
 }

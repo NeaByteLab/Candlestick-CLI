@@ -1,166 +1,189 @@
-# 🔄 Market Data Integration
+# 📊 Market Data Integration
 
-Complete guide to real-time market data integration using CCXT.
+Complete guide for integrating real-time market data using CCXT library.
 
 ## 🚀 Overview
 
-Candlestick-CLI integrates with CCXT (CryptoCurrency eXchange Trading Library) to provide real-time market data from cryptocurrency perpetual futures exchanges. The `CCXTProvider` class handles data fetching, validation, and formatting for perpetual futures markets.
+Candlestick-CLI provides seamless integration with cryptocurrency exchanges through the CCXT library. The `CCXTProvider` class handles all market data fetching, validation, and processing with comprehensive error handling.
 
-## 🔧 CCXTProvider Class
+## 📦 Installation
 
-### 🚀 Basic Usage
+CCXT is included as a dependency:
+
+```bash
+npm install @neabyte/candlestick-cli
+```
+
+## 💻 Basic Usage
+
+### Import CCXTProvider
 
 ```typescript
 import { CCXTProvider } from '@neabyte/candlestick-cli'
+```
 
-// Initialize provider
+### Create Provider Instance
+
+```typescript
 const provider = new CCXTProvider()
-
-// Fetch data
-const data = await provider.fetch4H('BTC/USDT', 100)
 ```
 
-### 🏗️ Constructor
+The provider is automatically configured for Binance futures trading with rate limiting enabled.
 
-```typescript
-new CCXTProvider()
-```
+## 📊 Data Fetching Methods
 
-Creates a new CCXT provider instance configured for Binance perpetual futures trading with rate limiting enabled. All data is fetched from perpetual futures markets which provide continuous trading without expiration dates.
+### `fetchOHLCV(symbol, timeframe, limit)`
 
-### 🔧 Methods
-
-#### `fetchOHLCV(symbol, timeframe, limit)`
-
-Fetch OHLCV data from cryptocurrency perpetual futures exchange.
-
-```typescript
-async fetchOHLCV(
-  symbol: string = 'BTC/USDT',
-  timeframe: string = '1h',
-  limit: number = 1000
-): Promise<MarketData[]>
-```
+Fetch OHLCV data from the exchange.
 
 **Parameters:**
-- `symbol` - Perpetual futures trading pair symbol (default: 'BTC/USDT')
-- `timeframe` - Time interval (default: '1h')
-- `limit` - Number of data points to fetch (default: 1000)
+- `symbol?: string` - Trading pair (default: 'BTC/USDT')
+- `timeframe?: string` - Time interval (default: '1h')
+- `limit?: number` - Number of candles (default: 1000)
 
-**Returns:** Array of market data with OHLCV values
-
-**Example:**
-```typescript
-const data = await provider.fetchOHLCV('ETH/USDT', '4h', 500)
-```
-
-#### `fetch4H(symbol, limit)`
-
-Convenience method for fetching 4-hour timeframe data.
-
-```typescript
-async fetch4H(
-  symbol: string = 'BTC/USDT',
-  limit: number = 500
-): Promise<MarketData[]>
-```
+**Returns:** `Promise<Candles>`
 
 **Example:**
 ```typescript
-const fourHourData = await provider.fetch4H('BTC/USDT', 200)
+const provider = new CCXTProvider()
+
+// Basic usage
+const data = await provider.fetchOHLCV('BTC/USDT', '4h', 200)
+
+// With defaults
+const data = await provider.fetchOHLCV() // BTC/USDT, 1h, 1000 candles
 ```
 
-#### `fetch1D(symbol, limit)`
+### `fetch4H(symbol, limit)`
 
-Convenience method for fetching daily timeframe data.
+Convenience method for 4-hour timeframe data.
 
-```typescript
-async fetch1D(
-  symbol: string = 'BTC/USDT',
-  limit: number = 200
-): Promise<MarketData[]>
-```
+**Parameters:**
+- `symbol?: string` - Trading pair (default: 'BTC/USDT')
+- `limit?: number` - Number of candles (default: 500)
+
+**Returns:** `Promise<Candles>`
 
 **Example:**
 ```typescript
-const dailyData = await provider.fetch1D('BTC/USDT', 100)
+const provider = new CCXTProvider()
+
+// Fetch 4-hour data
+const data = await provider.fetch4H('BTC/USDT', 100)
+const ethData = await provider.fetch4H('ETH/USDT', 200)
 ```
 
-#### `getLatestPrice(symbol)`
+### `fetch1D(symbol, limit)`
 
-Get latest price for perpetual futures trading pair.
+Convenience method for 1-day timeframe data.
 
-```typescript
-async getLatestPrice(symbol: string = 'BTC/USDT'): Promise<number>
-```
+**Parameters:**
+- `symbol?: string` - Trading pair (default: 'BTC/USDT')
+- `limit?: number` - Number of candles (default: 200)
+
+**Returns:** `Promise<Candles>`
 
 **Example:**
 ```typescript
-const currentPrice = await provider.getLatestPrice('BTC/USDT')
-console.log(`Current BTC price: $${currentPrice}`)
+const provider = new CCXTProvider()
+
+// Fetch daily data
+const data = await provider.fetch1D('BTC/USDT', 50)
+const ethData = await provider.fetch1D('ETH/USDT', 100)
 ```
 
-#### `getMarketInfo(symbol)`
+## 💰 Market Information
 
-Get market information for perpetual futures trading pair.
+### `getLatestPrice(symbol)`
 
+Get the latest price for a trading pair.
+
+**Parameters:**
+- `symbol?: string` - Trading pair (default: 'BTC/USDT')
+
+**Returns:** `Promise<number>`
+
+**Example:**
 ```typescript
-async getMarketInfo(symbol: string = 'BTC/USDT'): Promise<{
+const provider = new CCXTProvider()
+
+const price = await provider.getLatestPrice('BTC/USDT')
+console.log(`Current BTC price: $${price}`)
+
+const ethPrice = await provider.getLatestPrice('ETH/USDT')
+console.log(`Current ETH price: $${ethPrice}`)
+```
+
+### `getMarketInfo(symbol)`
+
+Get detailed market information for a trading pair.
+
+**Parameters:**
+- `symbol?: string` - Trading pair (default: 'BTC/USDT')
+
+**Returns:** `Promise<MarketInfo>`
+
+**MarketInfo Interface:**
+```typescript
+interface MarketInfo {
   symbol: string
   base: string
   quote: string
   precision: Record<string, unknown>
   limits: Record<string, unknown>
-}>
+}
 ```
 
 **Example:**
 ```typescript
-const marketInfo = await provider.getMarketInfo('BTC/USDT')
-console.log(`Base: ${marketInfo.base}, Quote: ${marketInfo.quote}`)
+const provider = new CCXTProvider()
+
+const info = await provider.getMarketInfo('BTC/USDT')
+console.log(`Symbol: ${info.symbol}`)
+console.log(`Base: ${info.base}`)
+console.log(`Quote: ${info.quote}`)
 ```
 
-## ⏰ Supported Timeframes
+## 🕒 Supported Timeframes
 
-The following timeframes are supported for perpetual futures data:
+| Timeframe | Description | Use Case |
+|-----------|-------------|----------|
+| `1m` | 1 minute | High-frequency trading |
+| `3m` | 3 minutes | Short-term analysis |
+| `5m` | 5 minutes | Intraday trading |
+| `15m` | 15 minutes | Swing trading |
+| `30m` | 30 minutes | Medium-term analysis |
+| `1h` | 1 hour | Day trading |
+| `2h` | 2 hours | Short-term trends |
+| `4h` | 4 hours | Medium-term trends |
+| `6h` | 6 hours | Position trading |
+| `8h` | 8 hours | Extended analysis |
+| `12h` | 12 hours | Long-term analysis |
+| `1d` | 1 day | Daily analysis |
+| `3d` | 3 days | Weekly analysis |
+| `1w` | 1 week | Monthly analysis |
+| `1M` | 1 month | Long-term analysis |
 
-| Timeframe | Description | Example |
-|-----------|-------------|---------|
-| `1m` | 1 minute | `provider.fetchOHLCV('BTC/USDT', '1m', 100)` |
-| `5m` | 5 minutes | `provider.fetchOHLCV('BTC/USDT', '5m', 100)` |
-| `15m` | 15 minutes | `provider.fetchOHLCV('BTC/USDT', '15m', 100)` |
-| `30m` | 30 minutes | `provider.fetchOHLCV('BTC/USDT', '30m', 100)` |
-| `1h` | 1 hour | `provider.fetchOHLCV('BTC/USDT', '1h', 100)` |
-| `4h` | 4 hours | `provider.fetch4H('BTC/USDT', 100)` |
-| `1d` | 1 day | `provider.fetch1D('BTC/USDT', 100)` |
-| `1w` | 1 week | `provider.fetchOHLCV('BTC/USDT', '1w', 100)` |
+## 🏭 Perpetual Futures
 
-## 💱 Supported Trading Pairs
+The provider supports perpetual futures trading pairs with the `:USDT` suffix:
 
-Common perpetual futures pairs supported by Binance:
+```typescript
+const provider = new CCXTProvider()
 
-### 🪙 Cryptocurrency Perpetual Futures
-- `BTC/USDT` - Bitcoin/USDT Perpetual
-- `ETH/USDT` - Ethereum/USDT Perpetual
-- `BNB/USDT` - Binance Coin/USDT Perpetual
-- `ADA/USDT` - Cardano/USDT Perpetual
-- `SOL/USDT` - Solana/USDT Perpetual
-- `DOT/USDT` - Polkadot/USDT Perpetual
-- `LINK/USDT` - Chainlink/USDT Perpetual
-- `UNI/USDT` - Uniswap/USDT Perpetual
-- `MATIC/USDT` - Polygon/USDT Perpetual
-- `AVAX/USDT` - Avalanche/USDT Perpetual
-- `ATOM/USDT` - Cosmos/USDT Perpetual
-- `LTC/USDT` - Litecoin/USDT Perpetual
+// Perpetual futures
+const btcFutures = await provider.fetch4H('BTC/USDT:USDT', 100)
+const ethFutures = await provider.fetch1D('ETH/USDT:USDT', 50)
 
-### 📊 Data Type
-All data is fetched from **perpetual futures markets**, which provide continuous trading with leverage and no expiration dates. This ensures consistent data availability and real-time price movements.
+// Spot trading
+const btcSpot = await provider.fetch4H('BTC/USDT', 100)
+```
 
-## ⚠️ Error Handling
+## 🔄 Error Handling
 
-The CCXTProvider includes comprehensive error handling:
+The provider includes comprehensive error handling for various scenarios:
 
-### 🚨 MarketDataError
+### MarketDataError
 
 Thrown when market data fetching fails:
 
@@ -168,190 +191,233 @@ Thrown when market data fetching fails:
 import { MarketDataError } from '@neabyte/candlestick-cli'
 
 try {
-  const data = await provider.fetch4H('BTC/USDT', 100)
+  const data = await provider.fetchOHLCV('BTC/USDT', '4h', 100)
 } catch (error) {
   if (error instanceof MarketDataError) {
-    console.error(`Market data error: ${error.message}`)
-    console.error(`Symbol: ${error.symbol}`)
-    console.error(`Timeframe: ${error.timeframe}`)
+    console.error('Market data error:', error.message)
+    console.error('Symbol:', error.symbol)
+    console.error('Timeframe:', error.timeframe)
   }
 }
 ```
 
-### ⚠️ Common Error Scenarios
+### Common Error Scenarios
 
-#### Invalid Symbol
-```typescript
-// Error: Invalid symbol: INVALID/PAIR
-const data = await provider.fetch4H('INVALID/PAIR', 100)
-```
+- **Network errors**: Connection issues or timeouts
+- **Rate limiting**: Exchange API rate limits exceeded
+- **Invalid symbols**: Unsupported trading pairs
+- **Invalid timeframes**: Unsupported time intervals
+- **Data validation**: Malformed OHLCV data
 
-#### Invalid Timeframe
-```typescript
-// Error: Invalid timeframe: 2h
-const data = await provider.fetchOHLCV('BTC/USDT', '2h', 100)
-```
+## 📈 Data Validation
 
-#### Rate Limit Exceeded
-```typescript
-// Error: Rate limit exceeded, please try again later
-const data = await provider.fetch4H('BTC/USDT', 10000)
-```
+The provider automatically validates all fetched data:
 
-#### Network Error
-```typescript
-// Error: Network error, please check your connection
-const data = await provider.fetch4H('BTC/USDT', 100)
-```
-
-## ✅ Data Validation
-
-The provider automatically validates fetched data:
-
-### 📊 OHLC Validation
-- Ensures high >= low for each candle
+### OHLC Validation
+- Ensures high ≥ low for each candle
 - Validates open and close prices
-- Checks for negative values
+- Checks for reasonable price ranges
 
-### 🏗️ Data Structure Validation
-- Verifies array format
-- Ensures non-empty data
-- Validates required fields
+### Volume Validation
+- Validates volume data is present
+- Ensures volume values are positive
+- Checks for reasonable volume ranges
 
-### ⚠️ Example Validation Error
-```typescript
-// Error: Invalid OHLC data at index 0: high < max(open, close)
-const data = await provider.fetch4H('BTC/USDT', 100)
-```
+### Timestamp Validation
+- Ensures timestamps are in milliseconds
+- Validates chronological order
+- Checks for reasonable time ranges
 
-## ⏱️ Rate Limiting
+## 🚀 Advanced Usage
 
-The CCXTProvider includes built-in rate limiting:
-
-- **Automatic rate limiting** enabled by default
-- **Configurable limits** based on exchange requirements
-- **Error handling** for rate limit exceeded scenarios
-
-### ⚙️ Rate Limit Configuration
+### Custom Error Handling
 
 ```typescript
-// The provider automatically handles rate limiting
-const provider = new CCXTProvider() // Rate limiting enabled by default
-```
+const provider = new CCXTProvider()
 
-## 📝 Complete Example
-
-### 🔄 Real-time Chart with Live Data
-
-```typescript
-import { Chart, CCXTProvider } from '@neabyte/candlestick-cli'
-
-async function displayLiveChart() {
-  try {
-    // Initialize provider
-    const provider = new CCXTProvider()
-    
-    // Fetch live perpetual futures data
-    const data = await provider.fetch4H('BTC/USDT', 100)
-    
-    // Get current price
-    const currentPrice = await provider.getLatestPrice('BTC/USDT')
-    
-    // Create chart
-    const chart = new Chart(data, { 
-      title: `BTC/USDT Perpetual 4H - Current: $${currentPrice}`,
-      width: 120,
-      height: 30
-    })
-    
-    // Highlight current price
-    chart.setHighlight(currentPrice.toString(), [255, 255, 0])
-    
-    // Display chart
-    chart.draw()
-    
-  } catch (error) {
-    if (error instanceof MarketDataError) {
-      console.error('Market data error:', error.message)
-    } else {
-      console.error('Unknown error:', error)
+async function fetchWithRetry(symbol: string, attempts = 3) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await provider.fetch4H(symbol, 100)
+    } catch (error) {
+      if (i === attempts - 1) throw error
+      console.log(`Attempt ${i + 1} failed, retrying...`)
+      await new Promise(resolve => setTimeout(resolve, 1000))
     }
   }
 }
 
-displayLiveChart()
+const data = await fetchWithRetry('BTC/USDT')
 ```
 
-### 🔄 Continuous Data Updates
+### Multiple Symbols
+
+```typescript
+const provider = new CCXTProvider()
+
+async function fetchMultipleSymbols(symbols: string[]) {
+  const results = await Promise.allSettled(
+    symbols.map(symbol => provider.fetch4H(symbol, 50))
+  )
+  
+  return results.map((result, index) => ({
+    symbol: symbols[index],
+    data: result.status === 'fulfilled' ? result.value : null,
+    error: result.status === 'rejected' ? result.reason : null
+  }))
+}
+
+const results = await fetchMultipleSymbols(['BTC/USDT', 'ETH/USDT', 'ADA/USDT'])
+```
+
+### Real-time Price Monitoring
+
+```typescript
+const provider = new CCXTProvider()
+
+async function monitorPrice(symbol: string, interval: number = 5000) {
+  while (true) {
+    try {
+      const price = await provider.getLatestPrice(symbol)
+      console.log(`${symbol}: $${price}`)
+      await new Promise(resolve => setTimeout(resolve, interval))
+    } catch (error) {
+      console.error(`Error fetching ${symbol} price:`, error.message)
+      await new Promise(resolve => setTimeout(resolve, interval))
+    }
+  }
+}
+
+// Monitor BTC price every 5 seconds
+monitorPrice('BTC/USDT', 5000)
+```
+
+## 📊 Data Structure
+
+### Candle Format
+
+Each candle contains:
+
+```typescript
+interface Candle {
+  open: number      // Opening price
+  high: number      // Highest price
+  low: number       // Lowest price
+  close: number     // Closing price
+  volume: number    // Trading volume
+  timestamp: number // Unix timestamp in milliseconds
+  type: CandleType  // 1 for bullish, -1 for bearish
+}
+```
+
+### Market Data Format
+
+Raw market data from exchange:
+
+```typescript
+interface MarketData {
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+  timestamp: number
+}
+```
+
+## 🔧 Configuration
+
+### Exchange Settings
+
+The provider is pre-configured for Binance futures:
+
+```typescript
+// Default configuration
+{
+  enableRateLimit: true,
+  options: {
+    defaultType: 'future'
+  }
+}
+```
+
+### Rate Limiting
+
+Rate limiting is enabled by default to prevent API abuse. The provider automatically handles:
+
+- Request throttling
+- Rate limit headers
+- Exponential backoff
+- Retry logic
+
+## 📝 Examples
+
+### Complete Chart with Live Data
 
 ```typescript
 import { Chart, CCXTProvider } from '@neabyte/candlestick-cli'
 
-async function continuousChart() {
+async function createLiveChart() {
   const provider = new CCXTProvider()
-  const chart = new Chart([], { title: 'Live BTC/USDT Perpetual 4H' })
+  const data = await provider.fetch4H('BTC/USDT', 100)
   
-  // Update chart every 5 minutes
-  setInterval(async () => {
-    try {
-      const data = await provider.fetch4H('BTC/USDT', 100)
-      chart.updateCandles(data, true) // Replace existing data
-      chart.draw()
-    } catch (error) {
-      console.error('Update failed:', error.message)
-    }
-  }, 5 * 60 * 1000) // 5 minutes
+  const chart = new Chart(data, {
+    title: 'BTC/USDT 4H Live Chart',
+    width: 120,
+    height: 30
+  })
   
-  // Initial load
-  const initialData = await provider.fetch4H('BTC/USDT', 100)
-  chart.updateCandles(initialData, true)
-  chart.draw()
+  await chart.draw()
 }
 
-continuousChart()
+createLiveChart().catch(console.error)
 ```
 
-## ⚡ Performance Considerations
+### Watch Mode with Real-time Updates
 
-### 📊 Data Limits
-- **Maximum candles**: 10,000 per request
-- **Recommended limit**: 1,000 for optimal performance
-- **Memory usage**: ~1MB per 1,000 candles
-
-### 🌐 Network Optimization
-- **Rate limiting**: Automatic to prevent API abuse
-- **Caching**: Consider implementing local caching for frequent requests
-- **Connection pooling**: CCXT handles connection management
-
-### 🔄 Error Recovery
-- **Automatic retries**: Not implemented by default
-- **Manual retry logic**: Implement exponential backoff for production use
-- **Fallback data**: Consider local data as fallback
-
-## 🔧 Troubleshooting
-
-### ⚠️ Common Issues
-
-**Network connectivity:**
 ```typescript
-// Error: Network error, please check your connection
-```
-Solution: Check internet connection and firewall settings
+import { Chart, CCXTProvider } from '@neabyte/candlestick-cli'
 
-**Invalid symbol:**
-```typescript
-// Error: Invalid symbol: BTC/USDT
-```
-Solution: Verify symbol format and availability on Binance perpetual futures
+async function watchChart(symbol: string, interval: number = 30000) {
+  const provider = new CCXTProvider()
+  const chart = new Chart([], { title: `${symbol} Live` })
+  
+  while (true) {
+    try {
+      const data = await provider.fetch4H(symbol, 50)
+      chart.updateCandles(data, true)
+      await chart.draw()
+      
+      await new Promise(resolve => setTimeout(resolve, interval))
+    } catch (error) {
+      console.error('Error updating chart:', error.message)
+      await new Promise(resolve => setTimeout(resolve, interval))
+    }
+  }
+}
 
-**Rate limit exceeded:**
-```typescript
-// Error: Rate limit exceeded, please try again later
+watchChart('BTC/USDT', 30000) // Update every 30 seconds
 ```
-Solution: Reduce request frequency or implement caching
 
-**Data validation errors:**
+### Export Live Data
+
 ```typescript
-// Error: Invalid OHLC data at index 0
-```
-Solution: Check exchange data quality or implement data filtering 
+import { Chart, CCXTProvider, exportToImage } from '@neabyte/candlestick-cli'
+
+async function exportLiveChart() {
+  const provider = new CCXTProvider()
+  const data = await provider.fetch1D('ETH/USDT', 30)
+  
+  const chart = new Chart(data, {
+    title: 'ETH/USDT Daily Chart'
+  })
+  
+  await exportToImage(chart, {
+    outputPath: 'eth-chart.png',
+    background: 'dark',
+    scale: 2
+  })
+}
+
+exportLiveChart().catch(console.error)
+``` 

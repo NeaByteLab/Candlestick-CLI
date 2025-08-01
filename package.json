@@ -1,6 +1,6 @@
 {
   "name": "@neabyte/candlestick-cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Beautiful terminal candlestick charts with real-time trading data. Create stunning ASCII art charts directly in your terminal with support for live market data, custom colors, and professional trading visualization.",
   "main": "dist/index.js",
   "bin": {
@@ -29,6 +29,7 @@
     "dev": "tsx src/cli.ts",
     "candlestick-cli": "tsx src/cli.ts",
     "example": "tsx examples/simple-test.ts",
+    "example:export": "tsx examples/export-test.ts",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
@@ -70,7 +71,12 @@
     "console-charts",
     "command-line-tools",
     "charting-library",
-    "market-analysis"
+    "market-analysis",
+    "chart-export",
+    "image-export",
+    "png-export",
+    "jpg-export",
+    "text-export"
   ],
   "author": {
     "name": "NeaByteLab",
@@ -116,7 +122,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "ccxt": "^4.4.97",
+    "canvas": "^3.1.2",
+    "ccxt": "^4.4.98",
     "figlet": "^1.8.2",
     "mathjs": "^14.6.0"
   }

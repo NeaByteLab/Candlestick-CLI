@@ -11,6 +11,11 @@ Complete API documentation for Candlestick-CLI.
 - [VolumePane Class](#volumepane-class)
 - [InfoBar Class](#infobar-class)
 - [CandleSet Class](#candleset-class)
+- [CCXTProvider Class](#ccxtprovider-class)
+- [Export Functions](#export-functions)
+- [Utility Functions](#utility-functions)
+- [Constants](#constants)
+- [Error Types](#error-types)
 - [Types](#types)
 
 ## Chart Class
@@ -39,260 +44,219 @@ interface ChartOptions {
 
 ### Methods
 
-#### `draw(): void`
-Renders the chart to console output.
+#### Core Rendering
+- `render(): Promise<string>` - Renders the chart to a string representation
+- `draw(): Promise<void>` - Renders the chart to console output
 
-#### `setBearColor(r: number, g: number, b: number): void`
-Set bearish candle color (RGB values 0-255).
+#### Color Configuration
+- `setBearColor(r: number, g: number, b: number): void` - Set bearish candle color (RGB values 0-255)
+- `setBullColor(r: number, g: number, b: number): void` - Set bullish candle color (RGB values 0-255)
+- `setVolBearColor(r: number, g: number, b: number): void` - Set volume bearish color (RGB values 0-255)
+- `setVolBullColor(r: number, g: number, b: number): void` - Set volume bullish color (RGB values 0-255)
 
-#### `setBullColor(r: number, g: number, b: number): void`
-Set bullish candle color (RGB values 0-255).
+#### Volume Configuration
+- `setVolumePaneEnabled(enabled: boolean): void` - Enable or disable volume pane display
+- `setVolumePaneHeight(height: number): void` - Set volume pane height in lines
 
-#### `setVolBearColor(r: number, g: number, b: number): void`
-Set volume bearish color (RGB values 0-255).
+#### Chart Customization
+- `setHighlight(price: string, color: ColorValue): void` - Highlight specific price level with color
+- `setName(name: string): void` - Set chart name/title
+- `setMargins(top?: number, right?: number, bottom?: number, left?: number): void` - Set chart margins
 
-#### `setVolBullColor(r: number, g: number, b: number): void`
-Set volume bullish color (RGB values 0-255).
+#### Data Management
+- `updateCandles(candles: Candles, reset?: boolean): void` - Update chart with new candle data
 
-#### `setVolumePaneEnabled(enabled: boolean): void`
-Enable or disable volume pane display.
+#### Size Management
+- `updateSize(width: number, height: number): void` - Update chart dimensions
+- `updateSizeFromTerminal(): void` - Update size from current terminal dimensions
+- `enableAutoResize(interval?: number): void` - Enable automatic terminal size following
+- `disableAutoResize(): void` - Disable automatic terminal size following
 
-#### `setVolumePaneHeight(height: number): void`
-Set volume pane height in lines.
+#### Scaling Configuration
+- `setScalingMode(mode: 'fit' | 'fixed' | 'price'): void` - Set chart scaling mode
+- `setPriceRange(minPrice: number, maxPrice: number): void` - Set price range for price-based scaling
+- `setTimeRange(startIndex: number, endIndex: number): void` - Set time range for fixed scaling
+- `fitToData(): void` - Fit chart to display all data points
 
-#### `setVolumePaneUnicodeFill(unicodeFill: string): void`
-Set Unicode character for volume bars.
+## CCXTProvider Class
 
-#### `setHighlight(price: string, color: ColorValue): void`
-Highlight specific price level with color.
-
-#### `setName(name: string): void`
-Set chart name/title.
-
-#### `setLabel(label: string, value: string): void`
-Set info bar label.
-
-#### `updateCandles(candles: Candles, reset?: boolean): void`
-Update chart with new candle data.
-
-#### `updateSize(width: number, height: number): void`
-Update chart dimensions.
-
-#### `updateSizeFromTerminal(): void`
-Update size from current terminal dimensions.
-
-#### `enableAutoResize(interval?: number): void`
-Enable automatic terminal size following.
-
-#### `disableAutoResize(): void`
-Disable automatic terminal size following.
-
-#### `setMargins(top?: number, right?: number, bottom?: number, left?: number): void`
-Set chart margins.
-
-#### `setScalingMode(mode: 'fit' | 'fixed' | 'price'): void`
-Set chart scaling mode.
-
-#### `setPriceRange(minPrice: number, maxPrice: number): void`
-Set price range for price-based scaling.
-
-#### `setTimeRange(startIndex: number, endIndex: number): void`
-Set time range for fixed scaling.
-
-#### `fitToData(): void`
-Auto-fit chart to show all data.
-
-## ChartData Class
-
-Manages chart dimensions and visible candles.
+Market data provider for fetching real-time cryptocurrency data using CCXT library.
 
 ### Constructor
 
 ```typescript
-new ChartData(candles: Candles, options?: ChartDataOptions)
+new CCXTProvider()
 ```
 
-**ChartDataOptions:**
+Creates a new CCXT provider instance configured for Binance futures trading.
+
+### Methods
+
+#### Data Fetching
+- `fetchOHLCV(symbol?: string, timeframe?: string, limit?: number): Promise<Candles>` - Fetch OHLCV data from exchange
+- `fetch4H(symbol?: string, limit?: number): Promise<Candles>` - Fetch 4-hour timeframe data
+- `fetch1D(symbol?: string, limit?: number): Promise<Candles>` - Fetch 1-day timeframe data
+
+#### Market Information
+- `getLatestPrice(symbol?: string): Promise<number>` - Get latest price for symbol
+- `getMarketInfo(symbol?: string): Promise<MarketInfo>` - Get market information
+
+**MarketInfo:**
 ```typescript
-interface ChartDataOptions {
-  width?: number   // Chart width
-  height?: number  // Chart height
+interface MarketInfo {
+  symbol: string
+  base: string
+  quote: string
+  precision: Record<string, unknown>
+  limits: Record<string, unknown>
 }
 ```
 
-### Methods
+## Export Functions
 
-#### `getTerminalSize(): TerminalSize`
-Get current terminal dimensions.
+### `exportToText(chart: Chart, outputPath: string, preserveColors?: boolean): Promise<void>`
 
-#### `computeHeight(volumePaneHeight: number): void`
-Compute chart height based on volume pane.
+Export chart to text file with optional color preservation.
 
-#### `computeVisibleCandles(): void`
-Compute which candles are visible based on scaling mode.
+**Parameters:**
+- `chart: Chart` - Chart instance to export
+- `outputPath: string` - Output file path
+- `preserveColors?: boolean` - Whether to preserve ANSI color codes (default: false)
 
-#### `resetCandles(): void`
-Reset all candles.
-
-#### `addCandles(candles: Candles): void`
-Add candles to main set.
-
-#### `setSize(width: number, height: number): void`
-Set chart size.
-
-#### `setMargins(top: number, right: number, bottom: number, left: number): void`
-Set chart margins.
-
-#### `setScalingMode(mode: 'fit' | 'fixed' | 'price'): void`
-Set chart scaling mode.
-
-#### `setPriceRange(minPrice: number, maxPrice: number): void`
-Set price range for price-based scaling.
-
-#### `setTimeRange(startIndex: number, endIndex: number): void`
-Set time range for fixed scaling.
-
-#### `fitToData(): void`
-Auto-fit chart to show all data.
-
-## ChartRenderer Class
-
-Handles the main chart rendering logic for Unicode-based candlestick charts.
-
-### Constructor
-
+**Example:**
 ```typescript
-new ChartRenderer()
+import { exportToText } from '@neabyte/candlestick-cli'
+
+await exportToText(chart, 'chart.txt')
+await exportToText(chart, 'chart.txt', true) // Preserve colors
 ```
 
-### Properties
+### `exportToImage(chart: Chart, options: ExportOptions): Promise<void>`
 
-- `bearishColor: RGBColor` - Bearish candle color (default: [234, 74, 90])
-- `bullishColor: RGBColor` - Bullish candle color (default: [52, 208, 88])
+Export chart to PNG image with customizable settings.
 
-### Methods
+**Parameters:**
+- `chart: Chart` - Chart instance to export
+- `options: ExportOptions` - Export configuration
 
-#### `render(chart: Chart): string`
-Render the complete Unicode candlestick chart for terminal display.
-
-## YAxis Class
-
-Handles price-to-height conversion and axis rendering.
-
-### Constructor
-
+**ExportOptions:**
 ```typescript
-new YAxis(chartData: ChartData)
+interface ExportOptions {
+  outputPath: string
+  background?: 'light' | 'dark'  // Background theme (default: 'dark')
+  scale?: number                  // Scale factor (default: 1)
+}
 ```
 
-### Methods
-
-#### `priceToHeights(candle: Candle): [number, number, number, number]`
-Convert candle prices to height coordinates.
-
-#### `renderLine(y: number, highlights?: ChartHighlights): string`
-Render a line of the Y-axis.
-
-#### `renderEmpty(y?: number, highlights?: ChartHighlights): string`
-Render empty line.
-
-## VolumePane Class
-
-Renders volume bars for candles.
-
-### Constructor
-
+**Example:**
 ```typescript
-new VolumePane(height: number)
+import { exportToImage } from '@neabyte/candlestick-cli'
+
+await exportToImage(chart, {
+  outputPath: 'chart.png',
+  background: 'light',
+  scale: 2
+})
 ```
 
-### Properties
+### `exportChart(chart: Chart, outputPath: string, options?: Partial<ExportOptions>): Promise<void>`
 
-- `height: number` - Volume pane height
-- `enabled: boolean` - Whether volume pane is enabled (default: true)
-- `bearishColor: RGBColor` - Bearish volume color (default: [234, 74, 90])
-- `bullishColor: RGBColor` - Bullish volume color (default: [52, 208, 88])
-- `unicodeFill: string` - Unicode character for volume bars
+Auto-detect export format based on file extension.
 
-### Methods
+**Parameters:**
+- `chart: Chart` - Chart instance to export
+- `outputPath: string` - Output file path (.txt or .png)
+- `options?: Partial<ExportOptions>` - Optional export options
 
-#### `render(candle: Candle, y: number, maxVolume: number): string`
-Render volume bar for a candle.
-
-## InfoBar Class
-
-Displays chart statistics and information.
-
-### Constructor
-
+**Example:**
 ```typescript
-new InfoBar(name: string)
+import { exportChart } from '@neabyte/candlestick-cli'
+
+await exportChart(chart, 'chart.txt')  // Text export
+await exportChart(chart, 'chart.png')  // Image export
 ```
 
-### Properties
+## Utility Functions
 
-- `name: string` - Chart name
-- `labels: ChartLabels` - Label configuration
+### Number Formatting
+- `fnum(number: number): string` - Format number with commas
+- `roundPrice(price: number): number` - Round price to 2 decimal places
+- `formatPrice(price: number): string` - Format price with commas and 2 decimals
 
-### Methods
+### Data Parsing
+- `parseCandlesFromCsv(content: string): Candles` - Parse candles from CSV content
+- `parseCandlesFromJson(content: string): Candles` - Parse candles from JSON content
 
-#### `renderPrice(stats: CandleSetStats): string`
-Render current price.
-
-#### `renderHighest(stats: CandleSetStats): string`
-Render highest price.
-
-#### `renderLowest(stats: CandleSetStats): string`
-Render lowest price.
-
-#### `renderVariation(stats: CandleSetStats): string`
-Render price variation.
-
-#### `renderAverage(stats: CandleSetStats): string`
-Render average price.
-
-#### `renderVolume(stats: CandleSetStats): string`
-Render volume information.
-
-#### `render(stats: CandleSetStats, width: number): string`
-Render the complete info bar.
-
-## CandleSet Class
-
-Manages a collection of candles and computes statistics.
-
-### Constructor
-
+**Example:**
 ```typescript
-new CandleSet(candles: Candles)
+import { fnum, formatPrice, parseCandlesFromCsv } from '@neabyte/candlestick-cli'
+
+const formatted = fnum(1234.56)        // "1,234.56"
+const price = formatPrice(50000)        // "50,000.00"
+const candles = parseCandlesFromCsv(csvContent)
 ```
 
-### Properties
+## Constants
 
-- `candles: Candles` - Array of candles
-- `minPrice: number` - Minimum price
-- `maxPrice: number` - Maximum price
-- `minVolume: number` - Minimum volume
-- `maxVolume: number` - Maximum volume
-- `variation: number` - Price variation percentage
-- `average: number` - Average price
-- `lastPrice: number` - Last price
-- `cumulativeVolume: number` - Cumulative volume
+### `CONSTANTS`
+Chart rendering constants including margins, dimensions, and formatting options.
 
-### Methods
+### `LABELS`
+Default labels and text constants used throughout the application.
 
-#### `addCandles(newCandles: Candles): void`
-Add candles to the set.
+### `COLORS`
+Default color definitions for chart elements.
 
-#### `setCandles(newCandles: Candles): void`
-Set candles and recompute statistics.
+### `RESET_COLOR`
+ANSI color reset code for terminal output.
 
-#### `getStats(): CandleSetStats`
-Get statistics as a structured object.
+**Example:**
+```typescript
+import { CONSTANTS, LABELS, COLORS, RESET_COLOR } from '@neabyte/candlestick-cli'
+
+console.log(`${COLORS.RED}Error${RESET_COLOR}`)
+```
+
+## Error Types
+
+### `OHLCError`
+Error thrown when OHLC data validation fails.
+
+### `MarketDataError`
+Error thrown when market data fetching or processing fails.
+
+### `ChartRenderError`
+Error thrown when chart rendering fails.
+
+### `ValidationError`
+Error thrown when input validation fails.
+
+### `TerminalError`
+Error thrown when terminal operations fail.
+
+### `ConfigurationError`
+Error thrown when configuration is invalid.
+
+### `ErrorType`
+Enum of all error types.
+
+**Example:**
+```typescript
+import { MarketDataError, ConfigurationError } from '@neabyte/candlestick-cli'
+
+try {
+  const data = await provider.fetchOHLCV('BTC/USDT')
+} catch (error) {
+  if (error instanceof MarketDataError) {
+    console.error('Market data error:', error.message)
+  }
+}
+```
 
 ## Types
 
-### Candle
+### `Candle`
+Individual candle data structure.
 
 ```typescript
 interface Candle {
@@ -306,55 +270,81 @@ interface Candle {
 }
 ```
 
-### CandleType
-
-```typescript
-enum CandleType {
-  Bearish = -1,
-  Bullish = 1
-}
-```
-
-### Candles
+### `Candles`
+Array of candle data.
 
 ```typescript
 type Candles = Candle[]
 ```
 
-### RGBColor
+### `CandleType`
+Candle type enumeration.
+
+```typescript
+type CandleType = 1 | -1  // 1 for bullish, -1 for bearish
+```
+
+### `RGBColor`
+RGB color tuple.
 
 ```typescript
 type RGBColor = [number, number, number]
 ```
 
-### ColorValue
+### `ColorValue`
+Color value union type.
 
 ```typescript
 type ColorValue = string | RGBColor | number
 ```
 
-### ChartHighlights
+### `ChartHighlights`
+Price highlighting configuration.
 
 ```typescript
 type ChartHighlights = Record<string, ColorValue>
 ```
 
-### CandleSetStats
+### `ChartLabels`
+Chart label configuration.
+
+```typescript
+type ChartLabels = Record<string, string>
+```
+
+### `ChartConstants`
+Chart constants configuration.
+
+```typescript
+type ChartConstants = Record<string, unknown>
+```
+
+### `CandleSetStats`
+Statistics for a set of candles.
 
 ```typescript
 interface CandleSetStats {
-  minPrice: number
-  maxPrice: number
-  minVolume: number
-  maxVolume: number
-  variation: number
-  average: number
-  lastPrice: number
-  cumulativeVolume: number
+  count: number
+  high: number
+  low: number
+  open: number
+  close: number
+  volume: number
 }
 ```
 
-### TerminalSize
+### `ChartDimensions`
+Chart dimension configuration.
+
+```typescript
+interface ChartDimensions {
+  width: number
+  height: number
+}
+```
+
+### `TerminalSize`
+Terminal size information.
 
 ```typescript
 interface TerminalSize {
@@ -363,15 +353,27 @@ interface TerminalSize {
 }
 ```
 
-### ChartLabels
+### `ExportOptions`
+Export configuration options.
 
 ```typescript
-interface ChartLabels {
-  price?: string
-  highest?: string
-  lowest?: string
-  variation?: string
-  average?: string
-  volume?: string
+interface ExportOptions {
+  outputPath: string
+  background?: 'light' | 'dark'
+  scale?: number
+}
+```
+
+### `MarketData`
+Market data structure for CCXT integration.
+
+```typescript
+interface MarketData {
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+  timestamp: number
 }
 ``` 

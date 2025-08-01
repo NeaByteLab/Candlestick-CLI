@@ -19,13 +19,13 @@ export const CONSTANTS: ChartConstants = {
   /** Top margin for chart display */
   MARGIN_TOP: 3,
   /** Right margin for chart display */
-  MARGIN_RIGHT: 4,
+  MARGIN_RIGHT: 2,
   /** Character precision for price display */
-  CHAR_PRECISION: 6,
+  CHAR_PRECISION: 4,
   /** Decimal precision for price display */
-  DEC_PRECISION: 5,
+  DEC_PRECISION: 2,
   /** Total width calculation: CHAR_PRECISION + 1 + DEC_PRECISION + MARGIN_RIGHT */
-  WIDTH: 6 + 1 + 5 + 4,
+  WIDTH: 4 + 1 + 2 + 2,
   /** Chart height offset */
   HEIGHT: 2,
   /** Y-axis spacing between tick marks */

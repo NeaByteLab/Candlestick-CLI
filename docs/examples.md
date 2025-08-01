@@ -4,6 +4,7 @@ This document provides comprehensive examples for using Candlestick-CLI.
 
 ## Table of Contents
 
+- [Output Examples](#output-examples)
 - [Basic Usage](#basic-usage)
 - [Custom Colors](#custom-colors)
 - [Volume Pane](#volume-pane)
@@ -11,7 +12,36 @@ This document provides comprehensive examples for using Candlestick-CLI.
 - [Auto-resize](#auto-resize)
 - [Scaling Modes](#scaling-modes)
 - [Real-time Data](#real-time-data)
+- [Export Examples](#export-examples)
 - [CLI Usage](#cli-usage)
+
+## Output Examples
+
+<div style="display: flex; justify-content: center; align-items: center; margin: 20px 0;">
+
+| Dark Mode Export | Light Mode Export |
+|------------------|-------------------|
+| ![Dark Mode Chart](../examples/output/example-dark.png) | ![Light Mode Chart](../examples/output/example-light.png) |
+| High-quality PNG export with dark background theme. Perfect for presentations, trading desks, and dark environments. | High-quality PNG export with light background theme. Ideal for reports, printing, and light environments. |
+
+</div>
+
+**Commands used:**
+```bash
+# Dark mode export
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200 -o example-dark.png --background dark --scale 2
+
+# Light mode export  
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200 -o example-light.png --background light --scale 2
+```
+
+**Text Export Example:**
+📄 [View Text Export Example](../examples/output/example.txt) - Plain text export with ANSI color codes stripped
+
+**Command used:**
+```bash
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200 -o example.txt
+```
 
 ## Basic Usage
 
@@ -29,7 +59,7 @@ const candles = [
 ]
 
 const chart = new Chart(candles, { title: 'BTC/USDT', width: 120, height: 30 })
-chart.draw()
+await chart.draw()
 ```
 
 ### Custom Dimensions
@@ -40,7 +70,7 @@ const chart = new Chart(candles, {
   width: 80,    // Custom width
   height: 20    // Custom height
 })
-chart.draw()
+await chart.draw()
 ```
 
 ## Custom Colors
@@ -54,7 +84,7 @@ const chart = new Chart(candles, { title: 'BTC/USDT' })
 chart.setBearColor(255, 107, 107)  // Red for bearish
 chart.setBullColor(81, 207, 102)   // Green for bullish
 
-chart.draw()
+await chart.draw()
 ```
 
 ### Volume Colors
@@ -66,7 +96,7 @@ const chart = new Chart(candles, { title: 'BTC/USDT' })
 chart.setVolBearColor(255, 107, 107)  // Red for bearish volume
 chart.setVolBullColor(81, 207, 102)   // Green for bullish volume
 
-chart.draw()
+await chart.draw()
 ```
 
 ### Hex Colors
@@ -78,7 +108,7 @@ const chart = new Chart(candles, { title: 'BTC/USDT' })
 chart.setBearColor(0xFF, 0x6B, 0x6B)  // #ff6b6b
 chart.setBullColor(0x51, 0xCF, 0x66)  // #51cf66
 
-chart.draw()
+await chart.draw()
 ```
 
 ## Volume Pane
@@ -90,21 +120,9 @@ const chart = new Chart(candles, { title: 'BTC/USDT' })
 
 // Enable volume pane
 chart.setVolumePaneEnabled(true)
-chart.setVolumePaneHeight(6)  // 6 lines high
+chart.setVolumePaneHeight(8)  // 8 lines high (default)
 
-chart.draw()
-```
-
-### Custom Volume Characters
-
-```typescript
-const chart = new Chart(candles, { title: 'BTC/USDT' })
-
-// Set custom Unicode character for volume bars
-chart.setVolumePaneUnicodeFill('█')  // Solid block
-chart.setVolumePaneHeight(8)
-
-chart.draw()
+await chart.draw()
 ```
 
 ### Disable Volume Pane
@@ -115,7 +133,7 @@ const chart = new Chart(candles, { title: 'BTC/USDT' })
 // Disable volume pane
 chart.setVolumePaneEnabled(false)
 
-chart.draw()
+await chart.draw()
 ```
 
 ## Price Highlighting
@@ -130,7 +148,7 @@ chart.setHighlight('100.50', 'red')           // Red highlight
 chart.setHighlight('110.00', [255, 255, 0])  // Yellow highlight
 chart.setHighlight('105.00', [0, 255, 255])  // Cyan highlight
 
-chart.draw()
+await chart.draw()
 ```
 
 ### Dynamic Highlighting
@@ -146,7 +164,7 @@ chart.setHighlight(stats.maxPrice.toString(), 'green')  // Highest price
 chart.setHighlight(stats.minPrice.toString(), 'red')    // Lowest price
 chart.setHighlight(stats.lastPrice.toString(), 'yellow') // Current price
 
-chart.draw()
+await chart.draw()
 ```
 
 ## Auto-resize
@@ -160,7 +178,7 @@ const chart = new Chart(candles, { title: 'Responsive Chart' })
 chart.enableAutoResize(2000)
 
 // The chart will automatically resize when terminal dimensions change
-chart.draw()
+await chart.draw()
 ```
 
 ### Disable Auto-resize
@@ -171,7 +189,7 @@ const chart = new Chart(candles, { title: 'Fixed Size Chart' })
 // Disable auto-resize
 chart.disableAutoResize()
 
-chart.draw()
+await chart.draw()
 ```
 
 ## Scaling Modes
@@ -185,7 +203,7 @@ const chart = new Chart(candles, { title: 'Fit Mode Chart' })
 chart.setScalingMode('fit')
 chart.fitToData()
 
-chart.draw()
+await chart.draw()
 ```
 
 ### Fixed Time Range
@@ -197,7 +215,7 @@ const chart = new Chart(candles, { title: 'Fixed Range Chart' })
 chart.setScalingMode('fixed')
 chart.setTimeRange(0, 49)  // Show first 50 candles
 
-chart.draw()
+await chart.draw()
 ```
 
 ### Price Range
@@ -209,7 +227,7 @@ const chart = new Chart(candles, { title: 'Price Range Chart' })
 chart.setScalingMode('price')
 chart.setPriceRange(100, 200)  // Show candles between $100-$200
 
-chart.draw()
+await chart.draw()
 ```
 
 ## Real-time Data
@@ -240,14 +258,14 @@ async function displayLiveChart() {
     
     // Enable volume pane
     chart.setVolumePaneEnabled(true)
-    chart.setVolumePaneHeight(5)
+    chart.setVolumePaneHeight(8)
     
     // Set margins and scaling
     chart.setMargins(2, 2, 1, 0)
     chart.setScalingMode('fit')
     chart.fitToData()
     
-    chart.draw()
+    await chart.draw()
   } catch (error) {
     console.error('Failed to display live chart:', error)
   }
@@ -267,17 +285,17 @@ async function displayMultipleTimeframes() {
   // 1-hour data
   const hourlyData = await provider.fetchOHLCV('BTC/USDT', '1h', 200)
   const hourlyChart = new Chart(hourlyData, { title: 'BTC/USDT 1H' })
-  hourlyChart.draw()
+  await hourlyChart.draw()
   
   // 4-hour data
   const fourHourData = await provider.fetch4H('BTC/USDT', 100)
   const fourHourChart = new Chart(fourHourData, { title: 'BTC/USDT 4H' })
-  fourHourChart.draw()
+  await fourHourChart.draw()
   
   // Daily data
   const dailyData = await provider.fetch1D('BTC/USDT', 50)
   const dailyChart = new Chart(dailyData, { title: 'BTC/USDT 1D' })
-  dailyChart.draw()
+  await dailyChart.draw()
 }
 
 displayMultipleTimeframes()
@@ -294,7 +312,7 @@ async function displayChartWithErrorHandling() {
     const data = await provider.fetch4H('BTC/USDT', 100)
     
     const chart = new Chart(data, { title: 'BTC/USDT Live' })
-    chart.draw()
+    await chart.draw()
   } catch (error) {
     if (error instanceof MarketDataError) {
       console.error('Market data error:', error.message)
@@ -307,6 +325,50 @@ async function displayChartWithErrorHandling() {
 }
 
 displayChartWithErrorHandling()
+```
+
+## Export Examples
+
+### Text Export
+
+```typescript
+import { exportToText } from '@neabyte/candlestick-cli'
+
+// Export as plain text
+await exportToText(chart, 'chart.txt')
+
+// Export with colors preserved
+await exportToText(chart, 'chart.txt', true)
+```
+
+### Image Export
+
+```typescript
+import { exportToImage } from '@neabyte/candlestick-cli'
+
+// Export as PNG with custom settings
+await exportToImage(chart, {
+  outputPath: 'chart.png',
+  scale: 2,
+  background: 'dark'
+})
+
+// Export with light background
+await exportToImage(chart, {
+  outputPath: 'chart.png',
+  scale: 1.5,
+  background: 'light'
+})
+```
+
+### Auto-detect Export
+
+```typescript
+import { exportChart } from '@neabyte/candlestick-cli'
+
+// Automatically detect format from file extension
+await exportChart(chart, 'chart.png', { scale: 2 })
+await exportChart(chart, 'chart.txt')
 ```
 
 ## CLI Usage
@@ -356,7 +418,32 @@ candlestick-cli -f data.csv --no-volume
 
 Custom volume height:
 ```bash
-candlestick-cli -f data.csv --volume-height 8
+candlestick-cli -f data.csv --volume-height 12
+```
+
+### Live Market Data
+
+```bash
+# Basic live chart
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200
+
+# Perpetual futures
+candlestick-cli -s BTC/USDT:USDT --timeframe 1h --limit 150
+
+# Watch mode
+candlestick-cli -s BTC/USDT --watch --interval 30
+```
+
+### Export Examples
+
+```bash
+# Text export
+candlestick-cli -f data.csv -o chart.txt
+candlestick-cli -s BTC/USDT -o chart.txt
+
+# PNG export
+candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
+candlestick-cli -f data.csv -o chart.png --scale 1.5 --background dark
 ```
 
 ### Complete Example
@@ -370,7 +457,7 @@ candlestick-cli \
   -h 30 \
   --bear-color "#ff6b6b" \
   --bull-color "#51cf66" \
-  --volume-height 6
+  --volume-height 8
 ```
 
 ## Advanced Examples
@@ -387,7 +474,7 @@ chart.setMargins(5, 6, 3, 1)
 chart.setScalingMode('fit')
 chart.fitToData()
 
-chart.draw()
+await chart.draw()
 ```
 
 ### Multiple Charts
@@ -396,12 +483,12 @@ chart.draw()
 // Create multiple charts with different configurations
 const chart1 = new Chart(candles, { title: 'Chart 1', width: 80, height: 20 })
 chart1.setBearColor(255, 0, 0)
-chart1.draw()
+await chart1.draw()
 
 const chart2 = new Chart(candles, { title: 'Chart 2', width: 120, height: 30 })
 chart2.setBullColor(0, 255, 0)
 chart2.setVolumePaneEnabled(false)
-chart2.draw()
+await chart2.draw()
 ```
 
 ### Error Handling
@@ -411,7 +498,7 @@ import { Chart, ChartRenderError, ValidationError } from '@neabyte/candlestick-c
 
 try {
   const chart = new Chart(candles, { title: 'Error Handling Example' })
-  chart.draw()
+  await chart.draw()
 } catch (error) {
   if (error instanceof ChartRenderError) {
     console.error('Chart rendering failed:', error.message)

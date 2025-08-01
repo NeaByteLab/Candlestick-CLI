@@ -4,6 +4,13 @@ export * from '@/chart'
 // Utilities
 export * from '@/utils'
 
+// Export utilities
+export {
+  exportToText,
+  exportToImage,
+  exportChart
+} from '@/utils/export'
+
 // Constants
 export { CONSTANTS, LABELS, COLORS, RESET_COLOR } from '@/constants'
 
@@ -19,7 +26,8 @@ export type {
   ChartConstants,
   CandleSetStats,
   ChartDimensions,
-  TerminalSize
+  TerminalSize,
+  ExportOptions
 } from '@/types/candlestick'
 
 // Market data provider

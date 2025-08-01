@@ -1,32 +1,36 @@
+import type { Candles, ChartHighlights, RGBColor, CandleSetStats } from '@/types/candlestick'
+import { CandleType } from '@/types/candlestick'
+import type { Candle } from '@/types/candlestick'
+import type { CandleSet } from '@/chart/candle-set'
+import type { YAxis } from '@/chart/y-axis'
+import { Chart } from '@/chart/chart'
 import { CONSTANTS } from '@/constants'
 import { truecolor } from '@/utils/core'
-import { Chart } from '@/chart/chart'
-import { ChartData } from '@/chart/chart-data'
-import { CandleSet } from '@/chart/candle-set'
-import { YAxis } from '@/chart/y-axis'
-import { CandleType } from '@/types/candlestick'
-import type { Candle, RGBColor, CandleSetStats, Candles, ChartHighlights } from '@/types/candlestick'
 
 /**
- * ChartRenderer handles the main chart rendering logic
+ * ChartRenderer handles the rendering of candlestick charts
  *
- * Responsible for converting chart data into ASCII art representation.
- * Implements comprehensive candle body/wick rendering, color application, and label formatting.
- * Provides complete chart rendering pipeline from data to terminal output.
+ * Provides comprehensive chart rendering functionality including:
+ * - Dynamic terminal size detection
+ * - Auto-sizing based on data density
+ * - Unicode candle rendering
+ * - Color support for bullish/bearish candles
+ * - Volume pane rendering
+ * - Y-axis graduations
  *
  * @example
  * ```typescript
  * import { ChartRenderer } from '@/chart/chart-renderer'
  *
  * const renderer = new ChartRenderer()
- * renderer.bearishColor = [255, 0, 0] // Custom red for bearish candles
- * renderer.bullishColor = [0, 255, 0] // Custom green for bullish candles
+ * const chartString = renderer.render(chart)
+ * console.log(chartString)
  * ```
  */
 export class ChartRenderer {
-  /** RGB color for bearish candles (default: red) */
+  /** Color for bearish candles (red) */
   bearishColor: RGBColor = [234, 74, 90]
-  /** RGB color for bullish candles (default: green) */
+  /** Color for bullish candles (green) */
   bullishColor: RGBColor = [52, 208, 88]
 
   /**
@@ -49,6 +53,144 @@ export class ChartRenderer {
   private colorize(candleType: CandleType, string: string): string {
     const color = candleType === CandleType.Bearish ? this.bearishColor : this.bullishColor
     return truecolor(string, ...color)
+  }
+
+  /**
+   * Get terminal dimensions
+   *
+   * Simple terminal size detection using process.stdout.
+   *
+   * @returns Terminal dimensions { width, height }
+   *
+   * @example
+   * ```typescript
+   * const { width, height } = this.getTerminalDimensions()
+   * // Returns { width: 120, height: 30 }
+   * ```
+   */
+  private getTerminalDimensions(): { width: number; height: number } {
+    if (typeof globalThis.process !== 'undefined' && globalThis.process.stdout) {
+      const { columns, rows } = globalThis.process.stdout
+      if (columns && rows && columns > 0 && rows > 0) {
+        return { width: columns, height: rows }
+      }
+    }
+    return { width: 120, height: 30 }
+  }
+
+  /**
+   * Render chart content with given candles
+   *
+   * Separates chart content rendering from terminal size calculations.
+   * Uses CONSTANTS for consistent rendering.
+   *
+   * @param chart - Chart instance
+   * @param candles - Candles to render
+   * @returns Rendered chart string
+   *
+   * @example
+   * ```typescript
+   * const chartString = this.renderChartContent(chart, candles)
+   * // Renders chart with specific candles
+   * ```
+   */
+  private renderChartContent(chart: Chart, candles: Candles): string {
+    const output: string[] = []
+    const { chartData } = chart
+    chartData.computeHeight(chart.volumePane.height)
+    const { visibleCandleSet: candleSet } = chartData
+    const graduationsOnRight = CONSTANTS.Y_AXIS_ON_THE_RIGHT
+    const renderLine = chart.yAxis.renderLine.bind(chart.yAxis)
+    const highlights = chart.highlights || {}
+    this.renderChartBody(output, chart, candles, graduationsOnRight, renderLine, highlights)
+    if (chart.volumePane.enabled) {
+      this.renderVolumePane(output, chart, candles, graduationsOnRight, candleSet)
+      const labels = this.renderLabels(chart, chartData.mainCandleSet)
+      if (labels) {
+        output.push(labels)
+      }
+    } else {
+      output.push(chart.infoBar.render(chartData.mainCandleSet, chartData.width))
+    }
+    return output.join('')
+  }
+
+  /**
+   * Sample candles following Python implementation
+   *
+   * Implements Python's intelligent sampling that preserves important data points.
+   * Prioritizes recent data and significant price movements.
+   *
+   * @param candles - Complete candle dataset
+   * @param targetCount - Target number of candles to show
+   * @returns Sampled candles for display
+   *
+   * @example
+   * ```typescript
+   * const sampled = this.sampleCandles(candles, 120)
+   * // Returns intelligently sampled candles
+   * ```
+   */
+  private sampleCandles(candles: Candles, targetCount: number): Candles {
+    if (candles.length <= targetCount) {
+      return candles
+    }
+    const sampled: Candles = []
+    sampled.push(candles[0])
+    const step = Math.max(1, Math.floor(candles.length / (targetCount - 2)))
+    for (let i = step; i < candles.length - 1; i += step) {
+      if (sampled.length >= targetCount - 1) {
+        break
+      }
+      sampled.push(candles[i])
+    }
+    sampled.push(candles[candles.length - 1])
+    if (sampled.length < targetCount) {
+      this.fillRemainingCandles(sampled, candles, targetCount)
+    }
+    return sampled.slice(0, targetCount)
+  }
+
+  /**
+   * Fill remaining slots with additional candles
+   *
+   * Adds more candles to reach the target count while maintaining chronological order.
+   *
+   * @param sampled - Current sampled candles array
+   * @param candles - Original candle array
+   * @param targetCount - Target number of candles
+   */
+  private fillRemainingCandles(sampled: Candles, candles: Candles, targetCount: number): void {
+    const remaining = targetCount - sampled.length
+    const gapStep = Math.max(1, Math.floor(candles.length / (remaining * 2)))
+    for (let i = gapStep; i < candles.length - 1; i += gapStep) {
+      if (sampled.length >= targetCount) {
+        break
+      }
+      if (!sampled.includes(candles[i])) {
+        const insertIndex = this.findInsertPosition(sampled, candles, i)
+        sampled.splice(insertIndex, 0, candles[i])
+      }
+    }
+  }
+
+  /**
+   * Find correct position to insert candle
+   *
+   * Determines the proper chronological position for inserting a new candle.
+   *
+   * @param sampled - Current sampled candles
+   * @param candles - Original candle array
+   * @param candleIndex - Index of candle to insert
+   * @returns Insert position index
+   */
+  private findInsertPosition(sampled: Candles, candles: Candles, candleIndex: number): number {
+    for (let j = 0; j < sampled.length; j++) {
+      if (candles.indexOf(sampled[j]) > candleIndex) {
+        return j
+      }
+    }
+    return sampled.length
   }
 
   /**
@@ -263,82 +405,39 @@ export class ChartRenderer {
     }
     const labelsText = parts.join(' | ')
     const chartAreaWidth = chart.chartData.width - CONSTANTS.WIDTH
-    // Strip ANSI color codes for length calculation
     const textLength = labelsText.replace(/\x1b\[[0-9;]*m/g, '').length
     const padding = Math.max(0, Math.floor((chartAreaWidth - textLength) / 2))
     return ' '.repeat(padding) + labelsText
   }
 
   /**
-   * Render the complete chart
+   * Render the complete chart with dynamic font scaling
    *
-   * Generates the complete ASCII chart including:
-   * - Y-axis with price labels and highlights
-   * - Candle rendering with proper spacing and compression
-   * - Volume pane (if enabled) with volume bars
-   * - Information bar with colored statistics
-   *
-   * Handles terminal size constraints and implements comprehensive chart scaling.
+   * Generates the complete ASCII chart with dynamic font size adjustment.
+   * More data = smaller font size for optimal display.
+   * Now properly handles async rendering for auto-resize scenarios.
+   * Optimized for smooth re-rendering in watch mode.
    *
    * @param chart - Chart instance containing all rendering data
    * @returns Complete ASCII chart string ready for console output
    *
    * @example
    * ```typescript
-   * const chartString = renderer.render(chart)
+   * const chartString = await renderer.render(chart)
    * console.log(chartString)
    * ```
    */
-  render(chart: Chart): string {
-    const output: string[] = []
+  async render(chart: Chart): Promise<string> {
     const { chartData } = chart
     chartData.computeHeight(chart.volumePane.height)
     const { visibleCandleSet: candleSet } = chartData
     const { candles } = candleSet
-    const graduationsOnRight = CONSTANTS.Y_AXIS_ON_THE_RIGHT
-    const renderLine = chart.yAxis.renderLine.bind(chart.yAxis)
-    const highlights = chart.highlights || {}
-    const candleSpacing = this.calculateCandleSpacing(chartData, candles)
-
-    this.renderChartBody(output, chart, candles, candleSpacing, graduationsOnRight, renderLine, highlights)
-
-    if (chart.volumePane.enabled) {
-      this.renderVolumePane(output, chart, candles, candleSpacing, graduationsOnRight, candleSet)
-      const labels = this.renderLabels(chart, chartData.mainCandleSet)
-      if (labels) {
-        output.push(labels)
-      }
-    } else {
-      output.push(chart.infoBar.render(chartData.mainCandleSet, chartData.width))
-    }
-
-    return output.join('')
-  }
-
-  /**
-   * Calculate candle spacing based on available width
-   *
-   * Determines how many candles to skip when rendering to fit within
-   * the available chart width. Implements automatic compression for large datasets.
-   *
-   * @param chartData - Chart data instance with width information
-   * @param candles - Array of candles to calculate spacing for
-   * @returns Spacing value (1 = no compression, >1 = compression)
-   *
-   * @example
-   * ```typescript
-   * const spacing = this.calculateCandleSpacing(chartData, candles)
-   * // Returns spacing value for rendering
-   * ```
-   */
-  private calculateCandleSpacing(chartData: ChartData, candles: Candles): number {
-    const availableWidth = chartData.width - CONSTANTS.WIDTH
-    const adjustedWidth = availableWidth - (CONSTANTS.Y_AXIS_ON_THE_RIGHT ? 0 : CONSTANTS.MARGIN_RIGHT)
-    const totalCandles = candles.length
-    if (totalCandles > adjustedWidth) {
-      return Math.ceil(totalCandles / adjustedWidth)
-    }
-    return 1
+    const terminalDimensions = this.getTerminalDimensions()
+    const availableWidth =
+      terminalDimensions.width - CONSTANTS.WIDTH - (CONSTANTS.Y_AXIS_ON_THE_RIGHT ? 0 : CONSTANTS.MARGIN_RIGHT)
+    const candlesToShow = Math.min(candles.length, Math.floor(availableWidth * 2.0))
+    const candlesToRender = this.sampleCandles(candles, candlesToShow)
+    return this.renderChartContent(chart, candlesToRender)
   }
 
   /**
@@ -350,7 +449,6 @@ export class ChartRenderer {
    * @param output - Output string array to append to
    * @param chart - Chart instance with rendering data
    * @param candles - Array of candles to render
-   * @param candleSpacing - Spacing between rendered candles
    * @param graduationsOnRight - Whether Y-axis is on the right side
    * @param renderLine - Function to render Y-axis line
    * @param highlights - Price highlights for Y-axis
@@ -364,13 +462,12 @@ export class ChartRenderer {
     output: string[],
     chart: Chart,
     candles: Candles,
-    candleSpacing: number,
     graduationsOnRight: boolean,
     renderLine: (y: number, highlights: ChartHighlights) => string,
     highlights: ChartHighlights
   ): void {
     for (let y = chart.chartData.height; y > 0; y--) {
-      this.renderChartLine(output, chart, candles, candleSpacing, graduationsOnRight, renderLine, highlights, y)
+      this.renderChartLine(output, chart, candles, graduationsOnRight, renderLine, highlights, y)
     }
   }
 
@@ -383,7 +480,6 @@ export class ChartRenderer {
    * @param output - Output string array to append to
    * @param chart - Chart instance with rendering data
    * @param candles - Array of candles to render
-   * @param candleSpacing - Spacing between rendered candles
    * @param graduationsOnRight - Whether Y-axis is on the right side
    * @param renderLine - Function to render Y-axis line
    * @param highlights - Price highlights for Y-axis
@@ -398,7 +494,6 @@ export class ChartRenderer {
     output: string[],
     chart: Chart,
     candles: Candles,
-    candleSpacing: number,
     graduationsOnRight: boolean,
     renderLine: (y: number, highlights: ChartHighlights) => string,
     highlights: ChartHighlights,
@@ -409,7 +504,7 @@ export class ChartRenderer {
     } else {
       output.push('\n', renderLine(y, highlights))
     }
-    for (let i = 0; i < candles.length; i += candleSpacing) {
+    for (let i = 0; i < candles.length; i++) {
       const candle = candles[i]
       output.push(this.renderCandle(candle, y, chart.yAxis))
     }
@@ -427,7 +522,6 @@ export class ChartRenderer {
    * @param output - Output string array to append to
    * @param chart - Chart instance with rendering data
    * @param candles - Array of candles to render volume for
-   * @param candleSpacing - Spacing between rendered candles
    * @param graduationsOnRight - Whether Y-axis is on the right side
    * @param candleSet - Candle set with volume statistics
    *
@@ -440,7 +534,6 @@ export class ChartRenderer {
     output: string[],
     chart: Chart,
     candles: Candles,
-    candleSpacing: number,
     graduationsOnRight: boolean,
     candleSet: CandleSet
   ): void {
@@ -448,7 +541,7 @@ export class ChartRenderer {
     const render = chart.volumePane.render.bind(chart.volumePane)
     const { maxVolume } = candleSet
     for (let y = chart.volumePane.height; y > 0; y--) {
-      this.renderVolumeLine(output, candles, candleSpacing, graduationsOnRight, renderEmpty, render, maxVolume, y)
+      this.renderVolumeLine(output, candles, graduationsOnRight, renderEmpty, render, maxVolume, y)
     }
     output.push('\n')
     output.push('\n')
@@ -462,7 +555,6 @@ export class ChartRenderer {
    *
    * @param output - Output string array to append to
    * @param candles - Array of candles to render volume for
-   * @param candleSpacing - Spacing between rendered candles
    * @param graduationsOnRight - Whether Y-axis is on the right side
    * @param renderEmpty - Function to render empty Y-axis space
    * @param render - Function to render volume bar
@@ -477,7 +569,6 @@ export class ChartRenderer {
   private renderVolumeLine(
     output: string[],
     candles: Candles,
-    candleSpacing: number,
     graduationsOnRight: boolean,
     renderEmpty: () => string,
     render: (candle: Candle, y: number, maxVolume: number) => string,
@@ -489,7 +580,7 @@ export class ChartRenderer {
     } else {
       output.push('\n', renderEmpty())
     }
-    for (let i = 0; i < candles.length; i += candleSpacing) {
+    for (let i = 0; i < candles.length; i++) {
       const candle = candles[i]
       output.push(render(candle, y, maxVolume))
     }

@@ -41,7 +41,7 @@ const candles = [
 
 // Create and display chart
 const chart = new Chart(candles, { title: 'Sample Chart', width: 120, height: 30 })
-chart.draw()
+await chart.draw()
 ```
 
 ### 2. 🔄 Real-time Market Data
@@ -60,7 +60,7 @@ async function displayLiveChart() {
   
   // Create and display chart
   const chart = new Chart(data, { title: 'BTC/USDT Perpetual 4H Live' })
-  chart.draw()
+  await chart.draw()
 }
 
 displayLiveChart().catch(console.error)
@@ -81,11 +81,11 @@ chart.setBullColor(0, 255, 0)    // Green for bullish candles
 
 // Configure volume pane
 chart.setVolumePaneEnabled(true)
-chart.setVolumePaneHeight(6)
+chart.setVolumePaneHeight(8)
 chart.setVolBearColor(255, 100, 100)  // Light red for bearish volume
 chart.setVolBullColor(100, 255, 100)  // Light green for bullish volume
 
-chart.draw()
+await chart.draw()
 ```
 
 ### 4. 🎯 Price Highlighting
@@ -102,7 +102,7 @@ chart.setHighlight('100.50', 'red')           // Red highlight
 chart.setHighlight('110.00', [255, 255, 0])  // Yellow highlight
 chart.setHighlight('105.00', [0, 255, 255])  // Cyan highlight
 
-chart.draw()
+await chart.draw()
 ```
 
 ## 🖥️ CLI Usage
@@ -125,6 +125,29 @@ Disable volume pane:
 
 ```bash
 candlestick-cli -f data.csv --no-volume
+```
+
+### Live Market Data
+
+```bash
+# Basic live chart
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200
+
+# Perpetual futures
+candlestick-cli -s BTC/USDT:USDT --timeframe 1h --limit 150
+
+# Watch mode
+candlestick-cli -s BTC/USDT --watch --interval 30
+```
+
+### Export Examples
+
+```bash
+# Text export
+candlestick-cli -f data.csv -o chart.txt
+
+# PNG export
+candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
 ```
 
 ### 📄 File Formats
@@ -200,6 +223,27 @@ const chart = new Chart(candles, { title: 'Custom Margins' })
 chart.setMargins(5, 6, 3, 1)
 ```
 
+### 📤 Export Features
+
+```typescript
+import { exportToText, exportToImage, exportChart } from '@neabyte/candlestick-cli'
+
+// Text export
+await exportToText(chart, 'chart.txt')
+await exportToText(chart, 'chart.txt', true) // With colors
+
+// Image export
+await exportToImage(chart, {
+  outputPath: 'chart.png',
+  scale: 2,
+  background: 'dark'
+})
+
+// Auto-detect format
+await exportChart(chart, 'chart.png', { scale: 2 })
+await exportChart(chart, 'chart.txt')
+```
+
 ## ⚠️ Error Handling
 
 The library provides comprehensive error handling:
@@ -209,7 +253,7 @@ import { Chart, ChartRenderError, MarketDataError } from '@neabyte/candlestick-c
 
 try {
   const chart = new Chart(candles, { title: 'Error Handling Example' })
-  chart.draw()
+  await chart.draw()
 } catch (error) {
   if (error instanceof ChartRenderError) {
     console.error('Chart rendering failed:', error.message)
@@ -224,6 +268,6 @@ try {
 ## 🎯 Next Steps
 
 - Explore the [API Reference](./api-reference.md) for detailed documentation
-- Check out [Advanced Examples](./examples/advanced.md) for complex usage patterns
+- Check out [Examples](./examples.md) for complex usage patterns
 - Learn about [Market Data Integration](./market-data.md) for real-time trading data
-- See [Customization Guide](./customization.md) for advanced styling options 
+- See [CLI Reference](./cli-reference.md) for command-line interface options 
