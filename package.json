@@ -1,0 +1,123 @@
+{
+  "name": "@neabyte/candlestick-cli",
+  "version": "1.0.0",
+  "description": "Beautiful terminal candlestick charts with real-time trading data. Create stunning ASCII art charts directly in your terminal with support for live market data, custom colors, and professional trading visualization.",
+  "main": "dist/index.js",
+  "bin": {
+    "candlestick-cli": "dist/cli.js"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./cli": {
+      "import": "./dist/cli.js",
+      "require": "./dist/cli.cjs"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "docs/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc && tsc-alias -f -fe .js",
+    "dev": "tsx src/cli.ts",
+    "candlestick-cli": "tsx src/cli.ts",
+    "example": "tsx examples/simple-test.ts",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts examples/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts examples/**/*.ts",
+    "format:fix": "prettier --write src/**/*.ts examples/**/*.ts",
+    "check": "npm run lint && npm run format:check",
+    "check:all": "npm run lint && npm run format:check && npm run build",
+    "pre-commit": "npm run lint && npm run format:check && npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "candlestick",
+    "trading",
+    "cli",
+    "ascii",
+    "chart",
+    "terminal",
+    "typescript",
+    "financial",
+    "cryptocurrency",
+    "bitcoin",
+    "forex",
+    "market-data",
+    "ohlc",
+    "technical-analysis",
+    "trading-tools",
+    "ascii-art",
+    "unicode-charts",
+    "real-time-data",
+    "ccxt",
+    "trading-visualization",
+    "market-charts",
+    "price-charts",
+    "volume-analysis",
+    "trading-indicators",
+    "financial-charts",
+    "terminal-graphics",
+    "console-charts",
+    "command-line-tools",
+    "charting-library",
+    "market-analysis"
+  ],
+  "author": {
+    "name": "NeaByteLab",
+    "email": "me@neabyte.com",
+    "url": "https://github.com/NeaByteLab"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeaByteLab/Candlestick-CLI.git",
+    "directory": "."
+  },
+  "homepage": "https://github.com/NeaByteLab/Candlestick-CLI#readme",
+  "bugs": {
+    "url": "https://github.com/NeaByteLab/Candlestick-CLI/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "devDependencies": {
+    "@types/figlet": "^1.7.0",
+    "@types/node": "^24.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-sonarjs": "^3.0.4",
+    "jest": "^30.0.5",
+    "prettier": "^3.6.2",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "ccxt": "^4.4.97",
+    "figlet": "^1.8.2",
+    "mathjs": "^14.6.0"
+  }
+}
