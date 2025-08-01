@@ -3,7 +3,7 @@
 [![NPM Version](https://img.shields.io/npm/v/@neabyte/candlestick-cli.svg)](https://www.npmjs.com/package/@neabyte/candlestick-cli)
 [![NPM Downloads](https://img.shields.io/npm/dm/@neabyte/candlestick-cli.svg)](https://www.npmjs.com/package/@neabyte/candlestick-cli)
 [![License](https://img.shields.io/npm/l/@neabyte/candlestick-cli.svg)](https://github.com/NeaByteLab/Candlestick-CLI/blob/main/LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
 
 Creating professional candlestick charts directly in your terminal, built with modern TypeScript and designed for developers who need real-time financial data visualization without leaving their terminal environment.

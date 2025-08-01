@@ -1,0 +1,12 @@
+[
+  {"open": 100.00, "high": 105.50, "low": 99.00, "close": 103.00, "volume": 1000, "timestamp": 1640995200000},
+  {"open": 103.00, "high": 108.00, "low": 102.00, "close": 106.00, "volume": 1200, "timestamp": 1640998800000},
+  {"open": 106.00, "high": 110.00, "low": 104.00, "close": 109.00, "volume": 1500, "timestamp": 1641002400000},
+  {"open": 109.00, "high": 112.00, "low": 107.00, "close": 111.00, "volume": 1800, "timestamp": 1641006000000},
+  {"open": 111.00, "high": 115.00, "low": 109.00, "close": 113.00, "volume": 2000, "timestamp": 1641009600000},
+  {"open": 113.00, "high": 116.00, "low": 111.00, "close": 114.00, "volume": 2200, "timestamp": 1641013200000},
+  {"open": 114.00, "high": 117.00, "low": 112.00, "close": 115.00, "volume": 2400, "timestamp": 1641016800000},
+  {"open": 115.00, "high": 118.00, "low": 113.00, "close": 116.00, "volume": 2600, "timestamp": 1641020400000},
+  {"open": 116.00, "high": 119.00, "low": 114.00, "close": 117.00, "volume": 2800, "timestamp": 1641024000000},
+  {"open": 117.00, "high": 120.00, "low": 115.00, "close": 118.00, "volume": 3000, "timestamp": 1641027600000}
+] 

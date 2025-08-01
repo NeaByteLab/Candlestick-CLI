@@ -45,7 +45,10 @@ lerna-debug.log*
 # Development
 reports/
 
-# Our data directory
+# Our data directory (but allow examples/data)
 data/
 data/*.csv
 data/*.json
+!examples/data/
+!examples/data/*.csv
+!examples/data/*.json
