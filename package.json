@@ -1,6 +1,6 @@
 {
   "name": "@neabyte/candlestick-cli",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Beautiful terminal candlestick charts with real-time trading data. Create stunning ASCII art charts directly in your terminal with support for live market data, custom colors, and professional trading visualization.",
   "main": "dist/index.js",
   "bin": {

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-08-02
+
+### Fixed
+- **Module Resolution** - Fixed ES module import resolution for global npm installation
+  - Resolved `ERR_MODULE_NOT_FOUND` errors when installing globally
+  - Fixed missing `.js` extensions in compiled import statements
+  - Improved TypeScript configuration for proper ES module output
+  - Ensured compatibility with Node.js ES module resolution
+- **Global Installation** - Enhanced npm package global installation reliability
+  - Verified global installation works correctly with `npm install -g .`
+  - Confirmed CLI functionality after global installation
+  - Tested live data functionality with real market data
+  - Validated all CLI options and features work as expected
+
+### Technical
+- **TypeScript Configuration** - Optimized tsconfig.json for ES module compatibility
+  - Maintained `moduleResolution: "bundler"` for proper `.js` extension handling
+  - Ensured `module: "ESNext"` for modern ES module support
+  - Verified all builds pass linting and formatting checks
+  - Confirmed comprehensive test suite passes
+
 ## [1.1.0] - 2025-08-02
 
 ### Added
@@ -181,6 +202,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## Version History
+
+### [1.1.1] - Bug Fix Release (August 2, 2025)
+- Fixed ES module import resolution for global npm installation
+- Resolved `ERR_MODULE_NOT_FOUND` errors when installing globally
+- Enhanced TypeScript configuration for proper ES module output
+- Verified global installation and CLI functionality
 
 ### [1.1.0] - Major Feature Release (August 2, 2025)
 - Export system with PNG and TXT formats
