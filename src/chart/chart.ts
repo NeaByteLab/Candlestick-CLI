@@ -19,7 +19,8 @@ declare const setTimeout: (callback: () => void, delay: number) => number
  * Provides a comprehensive interface for creating, configuring, and rendering
  * ASCII art candlestick charts. Supports real-time data updates, custom styling,
  * and interactive features like price highlighting and auto-resizing.
- * Implements complete chart lifecycle management and error handling.
+ * Implements complete chart lifecycle management and error handling for robust
+ * chart display across different environments.
  *
  * @example
  * ```typescript
@@ -50,7 +51,8 @@ export class Chart {
    *
    * Creates a new Chart instance with comprehensive validation and setup.
    * Initializes all chart components including data management, rendering,
-   * and display components. Handles configuration errors gracefully.
+   * and display components. Handles configuration errors gracefully and
+   * provides robust error handling for initialization failures.
    *
    * @param candles - Array of candle data to display
    * @param options - Chart configuration options
@@ -97,7 +99,8 @@ export class Chart {
    *
    * Renders the complete chart to a string representation ready for output.
    * This is the core rendering method that orchestrates all chart components.
-   * Supports true auto-sizing like TradingView with async rendering.
+   * Supports true auto-sizing like TradingView with async rendering and
+   * provides comprehensive error handling for rendering failures.
    *
    * @returns Promise that resolves to complete chart string with all components rendered
    *
@@ -116,7 +119,8 @@ export class Chart {
    *
    * Renders the complete chart and outputs it to the console using console.log.
    * This is the primary method for displaying charts in terminal environments.
-   * Supports true auto-sizing like TradingView with async rendering.
+   * Supports true auto-sizing like TradingView with async rendering and
+   * provides robust error handling for console output failures.
    *
    * @throws ChartRenderError if rendering fails
    *
@@ -144,7 +148,8 @@ export class Chart {
    * Set bearish candle color
    *
    * Configures the RGB color for bearish (downward) candles. Uses truecolor
-   * ANSI escape sequences for precise color control across different terminals.
+   * ANSI escape sequences for precise color control across different terminals
+   * and provides consistent visual representation for bearish price movements.
    *
    * @param r - Red component (0-255)
    * @param g - Green component (0-255)
@@ -170,7 +175,8 @@ export class Chart {
    * Set bullish candle color
    *
    * Configures the RGB color for bullish (upward) candles. Uses truecolor
-   * ANSI escape sequences for precise color control across different terminals.
+   * ANSI escape sequences for precise color control across different terminals
+   * and provides consistent visual representation for bullish price movements.
    *
    * @param r - Red component (0-255)
    * @param g - Green component (0-255)
@@ -196,7 +202,8 @@ export class Chart {
    * Set highlight for specific price
    *
    * Configures price highlighting on the Y-axis for specific price levels.
-   * Useful for highlighting support/resistance levels or important price points.
+   * Useful for highlighting support/resistance levels or important price points
+   * and provides enhanced visual identification of key market levels.
    *
    * @param price - Price string to highlight
    * @param color - Color value (name, RGB, or ANSI code)
@@ -219,7 +226,8 @@ export class Chart {
    * Set chart name
    *
    * Updates the chart name displayed in the information bar. This is
-   * typically the trading pair or chart title.
+   * typically the trading pair or chart title and provides clear
+   * identification of the displayed market data.
    *
    * @param name - Chart name to display
    *
@@ -236,7 +244,8 @@ export class Chart {
    * Set volume bearish color
    *
    * Configures the RGB color for bearish volume bars in the volume pane.
-   * Separate from main candle colors for volume-specific styling.
+   * Separate from main candle colors for volume-specific styling and
+   * provides distinct visual representation for bearish volume patterns.
    *
    * @param r - Red component (0-255)
    * @param g - Green component (0-255)
@@ -255,7 +264,8 @@ export class Chart {
    * Set volume bullish color
    *
    * Configures the RGB color for bullish volume bars in the volume pane.
-   * Separate from main candle colors for volume-specific styling.
+   * Separate from main candle colors for volume-specific styling and
+   * provides distinct visual representation for bullish volume patterns.
    *
    * @param r - Red component (0-255)
    * @param g - Green component (0-255)
@@ -275,6 +285,7 @@ export class Chart {
    *
    * Controls the visibility of the volume pane below the main chart.
    * When disabled, only the main chart and info bar are displayed.
+   * Provides flexible chart layout options for different analysis needs.
    *
    * @param enabled - Whether to enable volume pane
    *
@@ -292,6 +303,7 @@ export class Chart {
    *
    * Configures the height of the volume pane in lines. Affects the
    * overall chart layout and available space for volume visualization.
+   * Allows customization of volume display area for optimal analysis.
    *
    * @param height - Volume pane height in lines
    *
@@ -308,7 +320,8 @@ export class Chart {
    * Update candles in the chart
    *
    * Adds new candles to the chart or replaces existing ones. Supports
-   * both incremental updates and complete data replacement.
+   * both incremental updates and complete data replacement. Maintains
+   * data integrity and triggers appropriate chart updates.
    *
    * @param candles - New candles to add or replace
    * @param reset - Whether to reset existing candles (default: false)
@@ -332,6 +345,7 @@ export class Chart {
    *
    * Updates the chart dimensions and triggers recomputation of visible candles.
    * Only updates if the new dimensions are different from current ones.
+   * Provides responsive chart sizing for optimal display.
    *
    * @param width - New chart width
    * @param height - New chart height
@@ -356,7 +370,8 @@ export class Chart {
    * Update size from current terminal dimensions
    *
    * Automatically updates chart size based on current terminal dimensions.
-   * Useful for responsive charts that adapt to terminal resizing.
+   * Useful for responsive charts that adapt to terminal resizing and
+   * provides optimal display across different terminal environments.
    *
    * @example
    * ```typescript
@@ -373,7 +388,8 @@ export class Chart {
    *
    * Configures the chart to automatically resize when the terminal dimensions change.
    * Implements both event-based and interval-based resizing for maximum compatibility.
-   * Provides proper cleanup and error handling for robust auto-resizing.
+   * Provides proper cleanup and error handling for robust auto-resizing and
+   * ensures optimal chart display across different terminal environments.
    *
    * @param interval - Check interval in milliseconds (default: 1000ms)
    *
@@ -397,14 +413,10 @@ export class Chart {
         globalThis.console.error(`Auto-resize error: ${errorMessage}`)
       }
     }
-    if (globalThis.process.stdout.on) {
-      globalThis.process.stdout.on('resize', resizeHandler)
-    }
+    globalThis.process.stdout.on('resize', resizeHandler)
     const intervalId = globalThis.setInterval(resizeHandler, interval)
     this._cleanupAutoResize = (): void => {
-      if (globalThis.process.stdout.off) {
-        globalThis.process.stdout.off('resize', resizeHandler)
-      }
+      globalThis.process.stdout.off('resize', resizeHandler)
       globalThis.clearInterval(intervalId)
     }
     setTimeout(() => resizeHandler(), AUTO_RESIZE_INITIAL_DELAY)
@@ -414,7 +426,8 @@ export class Chart {
    * Disable automatic terminal size following
    *
    * Stops automatic resizing and cleans up event listeners and intervals.
-   * Should be called when auto-resize is no longer needed.
+   * Should be called when auto-resize is no longer needed and provides
+   * proper resource cleanup for optimal performance.
    *
    * @example
    * ```typescript
@@ -432,7 +445,8 @@ export class Chart {
    * Set chart margins
    *
    * Configures the chart margins to control spacing around the chart area.
-   * Validates margin values and applies them to the chart data.
+   * Validates margin values and applies them to the chart data. Provides
+   * flexible layout control for optimal chart display.
    *
    * @param top - Top margin (default: 3)
    * @param right - Right margin (default: 4)
@@ -458,7 +472,8 @@ export class Chart {
    * Set chart scaling mode
    *
    * Configures how the chart handles candle visibility and scaling.
-   * Different modes provide different ways to view the data.
+   * Different modes provide different ways to view the data and
+   * enable flexible chart analysis options.
    *
    * @param mode - 'fit' (fit all data), 'fixed' (fixed time scale), or 'price' (price-based scale)
    *
@@ -477,7 +492,8 @@ export class Chart {
    * Set price range for price-based scaling
    *
    * Configures a specific price range to display when using 'price' scaling mode.
-   * Only candles within the specified price range will be visible.
+   * Only candles within the specified price range will be visible and
+   * enables focused analysis on specific price levels.
    *
    * @param minPrice - Minimum price to show (inclusive)
    * @param maxPrice - Maximum price to show (inclusive)
@@ -496,7 +512,8 @@ export class Chart {
    * Set time range for fixed scaling
    *
    * Configures a specific time range to display when using 'fixed' scaling mode.
-   * Only candles within the specified index range will be visible.
+   * Only candles within the specified index range will be visible and
+   * enables focused analysis on specific time periods.
    *
    * @param startIndex - Start candle index
    * @param endIndex - End candle index
@@ -520,7 +537,8 @@ export class Chart {
    * Auto-fit chart to show all data with proper margins
    *
    * Resets the chart to 'fit' mode and clears any time range or price range restrictions.
-   * This ensures all available data is displayed with proper scaling.
+   * This ensures all available data is displayed with proper scaling and
+   * provides optimal visibility for comprehensive data analysis.
    *
    * @example
    * ```typescript
@@ -536,6 +554,7 @@ export class Chart {
    *
    * Internal cleanup function used by the auto-resize feature to remove
    * event listeners and intervals when auto-resize is disabled.
+   * Ensures proper resource management and prevents memory leaks.
    */
   private _cleanupAutoResize?: (() => void) | undefined
 }

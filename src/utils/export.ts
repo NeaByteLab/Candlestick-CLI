@@ -12,13 +12,14 @@ const UNKNOWN_ERROR = 'Unknown error'
 /**
  * Export chart to text file
  *
- * Exports the chart content to a plain text file, optionally preserving
- * ANSI color codes for terminal display. Creates the output directory
- * if it doesn't exist and handles file writing errors gracefully.
+ * Converts chart content to a plain text file with optional ANSI color code preservation.
+ * Creates output directories automatically and handles file system errors with proper
+ * error messages. Supports both colored and plain text output formats.
  *
- * @param chart - Chart instance to export
- * @param outputPath - Output file path
- * @param preserveColors - Whether to preserve ANSI color codes (default: false)
+ * @param chart - Chart instance containing data to export
+ * @param outputPath - Target file path for text output
+ * @param preserveColors - Preserve ANSI color codes in output (default: false)
+ * @throws ConfigurationError when file writing fails or path is invalid
  *
  * @example
  * ```typescript
@@ -44,13 +45,14 @@ export async function exportToText(chart: Chart, outputPath: string, preserveCol
 /**
  * Export chart to image file
  *
- * Converts the chart to a PNG image with customizable dimensions, background,
- * and font settings. Uses canvas API for high-quality rendering with proper
- * color support and text positioning.
+ * Renders chart data as a PNG image with configurable dimensions, themes, and scaling.
+ * Uses HTML5 Canvas API for pixel-perfect rendering with support for custom colors,
+ * backgrounds, and volume pane visualization. Handles chart scaling and positioning
+ * automatically based on data characteristics.
  *
- * @param chart - Chart instance to export
- * @param options - Export configuration options
- * @throws ConfigurationError if export fails
+ * @param chart - Chart instance containing data to render
+ * @param options - Export configuration with path, theme, and scaling options
+ * @throws ConfigurationError when rendering fails or options are invalid
  *
  * @example
  * ```typescript
@@ -87,11 +89,12 @@ export async function exportToImage(chart: Chart, options: ExportOptions): Promi
 /**
  * Validate export options
  *
- * Ensures all required export options are present and valid.
- * Checks for required outputPath and validates optional parameters.
+ * Performs comprehensive validation of export configuration parameters.
+ * Verifies required fields are present and validates parameter types and values.
+ * Ensures export operations have all necessary configuration data.
  *
- * @param options - Export options to validate
- * @throws ConfigurationError if options are invalid
+ * @param options - Export configuration object to validate
+ * @throws ConfigurationError when required options are missing or invalid
  *
  * @example
  * ```typescript
@@ -107,11 +110,12 @@ function validateExportOptions(options: ExportOptions): void {
 /**
  * Validate output file path
  *
- * Checks if the output path has a valid extension and format.
- * Supports .txt and .png file extensions.
+ * Verifies file path format and supported extension types for export operations.
+ * Validates path structure and ensures compatibility with export functions.
+ * Supports text (.txt) and image (.png) export formats.
  *
- * @param outputPath - File path to validate
- * @throws ConfigurationError if path is invalid
+ * @param outputPath - Target file path to validate
+ * @throws ConfigurationError when path format is invalid or extension unsupported
  *
  * @example
  * ```typescript
@@ -131,10 +135,12 @@ function validateOutputPath(outputPath: string): void {
 /**
  * Ensure directory exists for file path
  *
- * Creates the parent directory for the specified file path if it doesn't exist.
- * Handles nested directory creation and permission errors gracefully.
+ * Creates parent directories for target file paths when they don't exist.
+ * Handles nested directory structures and file system permission errors.
+ * Ensures export operations can write to specified locations.
  *
- * @param filePath - File path whose directory should be created
+ * @param filePath - Target file path requiring directory creation
+ * @throws ConfigurationError when directory creation fails due to permissions or path issues
  *
  * @example
  * ```typescript
@@ -157,11 +163,12 @@ function ensureDirectoryExists(filePath: string): void {
 /**
  * Strip ANSI color codes from text
  *
- * Removes all ANSI escape sequences from text content while preserving
- * the actual text content. Used for length calculations and plain text output.
+ * Removes ANSI escape sequences from text while preserving actual content.
+ * Used for text length calculations and plain text export operations.
+ * Handles all standard ANSI color and formatting codes.
  *
- * @param content - Text content with ANSI codes
- * @returns Text content without ANSI codes
+ * @param content - Text containing ANSI escape sequences
+ * @returns Clean text content without ANSI codes
  *
  * @example
  * ```typescript
@@ -176,16 +183,17 @@ function stripAnsiCodes(content: string): string {
 /**
  * Render chart directly to canvas with proper candle drawing
  *
- * Renders the chart content to a canvas element by drawing actual candle
- * rectangles and wicks instead of converting Unicode text. This ensures
- * proper candlestick visualization in the exported image.
+ * Converts chart data to canvas graphics using native drawing operations.
+ * Renders candlestick bodies and wicks as geometric shapes rather than
+ * text characters for optimal image quality and scalability.
  *
- * @param chart - Chart instance to render
- * @param options - Export options including scale and theme
- * @throws ConfigurationError if rendering fails
+ * @param chart - Chart instance containing data to render
+ * @param options - Export configuration with scale and theme settings
+ * @throws ConfigurationError when rendering fails or chart data is empty
  */
 async function renderChartToCanvas(chart: Chart, options: ExportOptions): Promise<void> {
   const { createCanvas } = await import('canvas')
+  const { writeFileSync } = await import('fs')
   const theme = options.background || 'dark'
   const backgroundColor = theme === 'light' ? '#ffffff' : '#000000'
   const scale = options.scale || 1
@@ -195,7 +203,7 @@ async function renderChartToCanvas(chart: Chart, options: ExportOptions): Promis
   }
   const { maxPrice, priceRange } = calculatePriceRange(candles)
   const { finalWidth, finalHeight, actualScale } = calculateCanvasDimensions(scale, chart)
-  const { chartAreaX, chartAreaY, chartAreaWidthScaled, chartAreaHeightScaled } = calculateChartArea(actualScale)
+  const { chartAreaX, chartAreaY, chartAreaWidthScaled, chartAreaHeightScaled } = calculateChartArea(actualScale, chart)
   const { candleWidth, candleSpacing } = calculateCandleDimensions(chartAreaWidthScaled, candles.length)
   const canvas = createCanvas(finalWidth, finalHeight)
   const ctx = canvas.getContext('2d')
@@ -214,17 +222,34 @@ async function renderChartToCanvas(chart: Chart, options: ExportOptions): Promis
     maxPrice,
     priceRange
   )
+  if (chart.volumePane.enabled) {
+    const volumeAreaY = chartAreaY + chartAreaHeightScaled + 20
+    const volumeAreaHeight = chart.volumePane.height * 16 * scale
+    drawVolumePane(
+      ctx,
+      candles,
+      chart,
+      chartAreaX,
+      volumeAreaY,
+      chartAreaWidthScaled,
+      volumeAreaHeight,
+      candleWidth,
+      candleSpacing
+    )
+  }
+  const buffer = canvas.toBuffer('image/png')
+  writeFileSync(options.outputPath, buffer)
 }
 
 /**
  * Calculate price range from candles
  *
- * Determines the minimum and maximum prices from the candle dataset to establish
- * the price range for chart scaling. Used for proper Y-axis scaling and price
- * label positioning in exported images.
+ * Analyzes candle dataset to determine price boundaries for chart scaling.
+ * Extracts minimum and maximum prices to establish Y-axis range for
+ * proper chart rendering and label positioning.
  *
- * @param candles - Array of candles to analyze
- * @returns Object containing maximum price and price range
+ * @param candles - Array of candle data to analyze
+ * @returns Object containing maximum price value and total price range
  *
  * @example
  * ```typescript
@@ -243,13 +268,13 @@ function calculatePriceRange(candles: Candles): { maxPrice: number; priceRange: 
 /**
  * Calculate canvas dimensions with scaling
  *
- * Computes optimal canvas dimensions based on scale factor and chart configuration.
- * Handles maximum canvas size limits and ensures minimum dimensions for readability.
- * Applies intelligent scaling to maintain aspect ratio and prevent oversized images.
+ * Determines optimal canvas size based on scale factor and chart characteristics.
+ * Applies size constraints and minimum dimensions for readability.
+ * Maintains aspect ratio while preventing oversized output images.
  *
- * @param scale - Scale factor for image export
- * @param chart - Chart instance with volume pane configuration
- * @returns Object containing final dimensions and actual scale factor
+ * @param scale - Requested scale factor for image export
+ * @param chart - Chart instance with volume pane and dimension settings
+ * @returns Object containing final canvas dimensions and applied scale factor
  *
  * @example
  * ```typescript
@@ -262,9 +287,13 @@ function calculateCanvasDimensions(
   chart: Chart
 ): { finalWidth: number; finalHeight: number; actualScale: number } {
   const padding = 40
-  const chartAreaWidth = 800 * scale
-  const chartAreaHeight = 400 * scale
-  const volumeHeight = chart.volumePane.enabled ? 100 * scale : 0
+  const asciiWidth = chart.chartData.width || 120
+  const asciiHeight = chart.chartData.height || 30
+  const charWidth = 8
+  const charHeight = 16
+  const chartAreaWidth = asciiWidth * charWidth * scale
+  const chartAreaHeight = asciiHeight * charHeight * scale
+  const volumeHeight = chart.volumePane.enabled ? chart.volumePane.height * charHeight * scale : 0
   const width = chartAreaWidth + padding * 2 + 120
   const height = chartAreaHeight + volumeHeight + padding * 2 + 60
   const MAX_CANVAS_SIZE = 16384
@@ -287,28 +316,36 @@ function calculateCanvasDimensions(
 /**
  * Calculate chart area dimensions
  *
- * Determines the chart area positioning and dimensions within the canvas.
- * Calculates scaled coordinates for proper chart rendering with margins
- * and padding. Used for positioning candles and price labels accurately.
+ * Determines chart area positioning and dimensions within the canvas space.
+ * Calculates scaled coordinates for chart rendering with proper margins
+ * and padding. Used for accurate positioning of chart elements.
  *
- * @param actualScale - Actual scale factor applied to canvas
- * @returns Object containing chart area coordinates and dimensions
+ * @param actualScale - Applied scale factor for canvas rendering
+ * @param chart - Chart instance with dimension and margin settings
+ * @returns Object containing chart area coordinates and scaled dimensions
  *
  * @example
  * ```typescript
- * const { chartAreaX, chartAreaY, chartAreaWidthScaled, chartAreaHeightScaled } = calculateChartArea(1.5)
+ * const { chartAreaX, chartAreaY, chartAreaWidthScaled, chartAreaHeightScaled } = calculateChartArea(1.5, chart)
  * console.log(`Chart area: ${chartAreaWidthScaled}x${chartAreaHeightScaled} at (${chartAreaX}, ${chartAreaY})`)
  * ```
  */
-function calculateChartArea(actualScale: number): {
+function calculateChartArea(
+  actualScale: number,
+  chart: Chart
+): {
   chartAreaX: number
   chartAreaY: number
   chartAreaWidthScaled: number
   chartAreaHeightScaled: number
 } {
   const padding = 40
-  const chartAreaWidth = 800
-  const chartAreaHeight = 400
+  const asciiWidth = chart.chartData.width || 120
+  const asciiHeight = chart.chartData.height || 30
+  const charWidth = 8
+  const charHeight = 16
+  const chartAreaWidth = asciiWidth * charWidth
+  const chartAreaHeight = asciiHeight * charHeight
   const chartAreaX = (padding + 120) * actualScale
   const chartAreaY = (padding + 20) * actualScale
   const chartAreaWidthScaled = chartAreaWidth * actualScale
@@ -319,13 +356,13 @@ function calculateChartArea(actualScale: number): {
 /**
  * Calculate candle dimensions for rendering
  *
- * Computes optimal candle width and spacing based on available chart area
- * and number of candles. Ensures candles are visible and properly spaced
- * for clear visualization in exported images.
+ * Determines optimal candle width and spacing based on chart area and data count.
+ * Ensures candles remain visible and properly spaced for clear visualization.
+ * Balances candle size with spacing for optimal chart readability.
  *
  * @param chartAreaWidthScaled - Available chart area width in pixels
- * @param candleCount - Number of candles to display
- * @returns Object containing candle width and spacing values
+ * @param candleCount - Total number of candles to display
+ * @returns Object containing calculated candle width and spacing values
  *
  * @example
  * ```typescript
@@ -376,10 +413,18 @@ function drawPriceLabels(
   actualScale: number,
   theme: string
 ): void {
-  const priceStep = priceRange / 5
-  for (let i = 0; i <= 5; i++) {
-    const price = maxPrice - priceStep * i
-    const y = chartAreaY + ((priceStep * i) / priceRange) * chartAreaHeightScaled
+  const minPrice = maxPrice - priceRange
+  const chartHeight = Math.round(chartAreaHeightScaled / (16 * actualScale))
+  for (let i = 1; i <= chartHeight; i++) {
+    let price: number
+    if (i === chartHeight) {
+      price = maxPrice
+    } else if (i === 1) {
+      price = minPrice
+    } else {
+      price = minPrice + ((i - 1) * priceRange) / (chartHeight - 1)
+    }
+    const y = chartAreaY + ((maxPrice - price) / priceRange) * chartAreaHeightScaled
     ctx.fillStyle = theme === 'light' ? '#666666' : '#999999'
     ctx.font = `${16 * actualScale}px monospace`
     ctx.fillText(price.toFixed(CONSTANTS.DEC_PRECISION), 40 * actualScale, y - 10 * actualScale)
@@ -455,6 +500,59 @@ function drawCandles(
 }
 
 /**
+ * Draw volume pane on canvas
+ *
+ * Renders volume bars below the main chart with proper scaling and colors.
+ * Uses bullish/bearish colors based on candle direction and scales volume
+ * to fit the available height.
+ *
+ * @param ctx - Canvas rendering context
+ * @param candles - Array of candle data
+ * @param chart - Chart instance for color configuration
+ * @param volumeAreaX - X-coordinate of volume area
+ * @param volumeAreaY - Y-coordinate of volume area
+ * @param volumeAreaWidth - Width of volume area
+ * @param volumeAreaHeight - Height of volume area
+ * @param candleWidth - Width of each candle
+ * @param candleSpacing - Spacing between candles
+ *
+ * @example
+ * ```typescript
+ * drawVolumePane(ctx, candles, chart, 100, 500, 800, 100, 8, 12)
+ * ```
+ */
+function drawVolumePane(
+  ctx: {
+    fillStyle: string | CanvasGradient | CanvasPattern
+    fillRect: (x: number, y: number, width: number, height: number) => void
+  },
+  candles: Candles,
+  chart: Chart,
+  volumeAreaX: number,
+  volumeAreaY: number,
+  _volumeAreaWidth: number,
+  volumeAreaHeight: number,
+  candleWidth: number,
+  candleSpacing: number
+): void {
+  const maxVolume = Math.max(...candles.map(c => c.volume || 0))
+  candles.forEach((candle, index) => {
+    if (!candle.volume) {
+      return
+    }
+    const x = volumeAreaX + index * candleSpacing + (candleSpacing - candleWidth) / 2
+    const volumeHeight = (candle.volume / maxVolume) * volumeAreaHeight
+    const y = volumeAreaY + volumeAreaHeight - volumeHeight
+    const isBullish = candle.close > candle.open
+    const volumeColor = isBullish
+      ? `rgb(${chart.volumePane.bullishColor[0]}, ${chart.volumePane.bullishColor[1]}, ${chart.volumePane.bullishColor[2]})`
+      : `rgb(${chart.volumePane.bearishColor[0]}, ${chart.volumePane.bearishColor[1]}, ${chart.volumePane.bearishColor[2]})`
+    ctx.fillStyle = volumeColor
+    ctx.fillRect(x, y, candleWidth, volumeHeight)
+  })
+}
+
+/**
  * Export chart with automatic format detection
  *
  * Automatically detects file format from extension and exports accordingly.
@@ -477,7 +575,6 @@ export async function exportChart(
   options: Partial<ExportOptions> = {}
 ): Promise<void> {
   const ext = extname(outputPath).toLowerCase()
-
   if (ext === '.txt') {
     exportToText(chart, outputPath)
   } else if (ext === '.png') {

@@ -8,12 +8,13 @@ declare const process: {
   on(event: string, handler: () => void): void
   stdout: {
     write(data: string): boolean
+    on(event: string, handler: () => void): void
   }
 }
 declare const console: Console
 declare const setInterval: (callback: () => void, delay: number) => number
-
-// Node.js global declarations
+declare const setTimeout: (callback: () => void, delay: number) => number
+declare const clearTimeout: (id: number) => void
 declare const clearInterval: (id: number) => void
 
 import { parseArgs } from './parser'
@@ -24,11 +25,13 @@ import { handleChartOutput } from './output'
 import type { CliOptions } from './types'
 import type { Chart } from '@/chart/chart'
 
+const UNKNOWN_ERROR = 'Unknown error'
+
 /**
  * Display ASCII art banner
  *
- * Shows the application banner with figlet styling.
- * Used for visual branding in the CLI interface.
+ * Renders the application banner using figlet with custom styling.
+ * Provides visual branding for the CLI interface.
  *
  * @example
  * ```typescript
@@ -49,7 +52,7 @@ async function showBanner(): Promise<void> {
  * Clear console with smooth animation
  *
  * Uses ANSI escape codes to hide cursor, clear screen, and restore cursor.
- * Provides a clean visual transition for watch mode updates.
+ * Creates a clean visual transition for watch mode updates.
  *
  * @example
  * ```typescript
@@ -65,22 +68,72 @@ function clearSmoothly(): void {
 /**
  * Start watch mode for live data updates
  *
- * Runs continuous chart updates at specified intervals.
- * Handles cleanup on process termination.
+ * Runs continuous chart updates at specified intervals with real-time terminal resize detection.
+ * Handles cleanup on process termination and automatically adapts chart to terminal size changes.
+ * Implements smooth resize handling with latest data fetching and immediate chart redraw.
  *
  * @param options - CLI configuration options
  * @param chart - Chart instance to update
+ *
+ * @example
+ * ```typescript
+ * await startWatchMode(options, chart)
+ * // Chart updates every 30 seconds with resize detection
+ * ```
  */
 async function startWatchMode(options: CliOptions, chart: Chart): Promise<void> {
   const interval = (options.interval || 30) * 1000
+  const RESIZE_DEBOUNCE = 200
   let updateCount = 0
   let lastUpdateTime = Date.now()
+  let resizeTimeout: number | null = null
   const cleanup = (): void => {
     console.log('\n👋 Stopping watch mode...')
     process.exit(0)
   }
   process.on('SIGINT', cleanup)
   process.on('SIGTERM', cleanup)
+
+  /**
+   * Handle terminal resize events
+   *
+   * Detects terminal size changes and immediately updates the chart with latest data.
+   * Implements debounced resize handling to prevent excessive updates during resize.
+   * Fetches fresh data and redraws chart with new dimensions.
+   *
+   * @example
+   * ```typescript
+   * process.stdout.on('resize', handleResize)
+   * // Automatically handles terminal resize events
+   * ```
+   */
+  const handleResize = (): void => {
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout)
+    }
+    resizeTimeout = setTimeout(async () => {
+      try {
+        await new Promise<void>(resolve => setTimeout(resolve, 50))
+        const oldSize = chart.chartData.getTerminalSize()
+        chart.updateSizeFromTerminal()
+        const newSize = chart.chartData.getTerminalSize()
+        const candles = await fetchData(options)
+        chart.updateCandles(candles, true)
+        clearSmoothly()
+        const sizeChangeMessage = `📏 Terminal resized: ${oldSize.width}x${oldSize.height} → ${newSize.width}x${newSize.height}`
+        console.log(sizeChangeMessage)
+        const visibleCandles = chart.chartData.visibleCandleSet.candles.length
+        const totalCandles = chart.chartData.mainCandleSet.candles.length
+        console.log(`🕯️  Candles: ${visibleCandles}/${totalCandles} visible`)
+        await chart.draw()
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
+        console.error(`❌ Resize failed: ${errorMessage}`)
+      }
+    }, RESIZE_DEBOUNCE)
+  }
+  process.stdout.on('resize', handleResize)
+  chart.disableAutoResize()
   if (options.watch && options.volumeHeight === 8) {
     chart.setVolumePaneHeight(12)
   }
@@ -93,18 +146,25 @@ async function startWatchMode(options: CliOptions, chart: Chart): Promise<void> 
       updateCount++
       const startTime = Date.now()
       process.stdout.write(`\r🔄 Updating chart... (${updateCount})`)
+      const oldSize = chart.chartData.getTerminalSize()
+      chart.updateSizeFromTerminal()
+      const newSize = chart.chartData.getTerminalSize()
       const candles = await fetchData(options)
       chart.updateCandles(candles, true)
       clearSmoothly()
       const updateTime = Date.now() - startTime
       const timeSinceLastUpdate = Date.now() - lastUpdateTime
       lastUpdateTime = Date.now()
+      const visibleCandles = chart.chartData.visibleCandleSet.candles.length
+      const totalCandles = chart.chartData.mainCandleSet.candles.length
       console.log(`📊 Chart updated in ${updateTime}ms (${timeSinceLastUpdate}ms since last update)`)
+      console.log(`📏 Terminal: ${oldSize.width}x${oldSize.height} → ${newSize.width}x${newSize.height}`)
+      console.log(`🕯️  Candles: ${visibleCandles}/${totalCandles} visible`)
       console.log(`⏰ Next update in ${interval / 1000} seconds`)
       console.log('')
       await chart.draw()
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
       console.error(`❌ Update failed: ${errorMessage}`)
       console.error('🔄 Retrying in next cycle...')
     }
@@ -154,15 +214,14 @@ async function main(): Promise<void> {
     }
   } catch (error) {
     await showBanner()
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-    console.error(`❌ Error: ${errorMessage}`)
-    console.error('💡 Use --help for more information.')
+    const errorMessage = error instanceof Error ? error.message : UNKNOWN_ERROR
+    console.error(`❌ Fatal error: ${errorMessage}`)
     process.exit(1)
   }
 }
 
 main().catch(async error => {
   await showBanner()
-  console.error(`❌ Fatal error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  console.error(`❌ Fatal error: ${error instanceof Error ? error.message : UNKNOWN_ERROR}`)
   process.exit(1)
 })

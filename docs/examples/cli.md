@@ -127,10 +127,10 @@ candlestick-cli -s BTC/USDT -o chart.txt
 candlestick-cli -f data.csv -o chart.png
 
 # High-quality PNG export
-candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
+candlestick-cli -s BTC/USDT -o chart.png --background light
 
 # Dark theme PNG export
-candlestick-cli -f data.csv -o chart.png --scale 1.5 --background dark
+candlestick-cli -f data.csv -o chart.png --background dark
 ```
 
 ## 📄 File Format Examples
@@ -255,7 +255,7 @@ candlestick-cli -f data.csv --width 150 --height 40 --volume-height 8
 
 ```bash
 # Export live data to high-quality PNG
-candlestick-cli -s BTC/USDT -o chart.png --scale 3 --background light
+candlestick-cli -s BTC/USDT -o chart.png --background light
 
 # Export file data to text with custom title
 candlestick-cli -f data.csv -o chart.txt -t "Custom Chart Title"
@@ -325,7 +325,6 @@ candlestick-cli -s BTC/USDT \
   --timeframe 1d \
   --limit 30 \
   -o btc-daily-analysis.png \
-  --scale 2 \
   --background light \
   --title "BTC/USDT Daily Analysis"
 ```

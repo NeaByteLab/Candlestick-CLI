@@ -1,6 +1,6 @@
 {
   "name": "@neabyte/candlestick-cli",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Beautiful terminal candlestick charts with real-time trading data. Create stunning ASCII art charts directly in your terminal with support for live market data, custom colors, and professional trading visualization.",
   "main": "dist/index.js",
   "bin": {
@@ -25,7 +25,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && tsc-alias -f -fe .js",
+    "build": "tsc && tsc-alias -f -fe .js && npm run minify",
+    "minify": "find dist -name '*.js' -exec terser {} --compress --mangle -o {} \\;",
     "dev": "tsx src/cli.ts",
     "candlestick-cli": "tsx src/cli.ts",
     "example": "tsx examples/simple-test.ts",
@@ -117,6 +118,7 @@
     "eslint-plugin-sonarjs": "^3.0.4",
     "jest": "^30.0.5",
     "prettier": "^3.6.2",
+    "terser": "^5.43.1",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"

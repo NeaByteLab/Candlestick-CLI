@@ -5,7 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.2] - 2025-08-04
+
+### Removed
+- **`--scale` Parameter** - Completely removed scale parameter from CLI and API
+  - Removed `scale` property from `CliOptions` interface
+  - Updated CLI parser to no longer accept `--scale` argument
+  - Removed scale logic from export functions
+  - Updated all documentation to remove scale references
+  - Simplified export API for better reliability
+
+### Fixed
+- **PNG Export "No Fit" Issue** - Fixed incorrect dimension calculations in image export
+  - Updated `calculateCanvasDimensions` to use actual ASCII chart dimensions
+  - Fixed `calculateChartArea` to derive pixel dimensions from character dimensions
+  - Improved terminal size detection with multiple fallback methods
+  - Enhanced volume pane rendering in PNG exports
+  - Fixed price label gaps by using interpolated pricing logic
+- **Terminal Detection** - Improved terminal size detection robustness
+  - Refactored `getTerminalSize()` to reduce cognitive complexity
+  - Added multiple fallback methods for terminal dimension detection
+  - Fixed `process` references to use `globalThis.process`
+  - Enhanced error handling for edge cases
+
+### Changed
+- **Documentation** - Updated all documentation to reflect scale parameter removal
+  - Removed `--scale` references from CLI examples
+  - Updated API documentation to remove scale options
+  - Simplified export examples and usage guides
+  - Updated getting started and examples documentation
+- **Code Quality** - Improved code structure and maintainability
+  - Refactored complex functions to meet cognitive complexity limits
+  - Enhanced error handling and type safety
+  - Improved code formatting and consistency
+
+### Technical
+- **Export System** - Enhanced PNG export reliability
+  - Fixed dimension mapping between ASCII and pixel coordinates
+  - Improved volume pane rendering in image exports
+  - Enhanced price label positioning and interpolation
+  - Better error handling for export operations
+- **Build System** - Added Terser minification for optimized package size
+  - Integrated Terser for JavaScript minification
+  - Minified all 27 JavaScript files in dist/
+  - Reduced package size significantly for npm distribution
+  - Enhanced TypeScript configuration with comment removal
+
+---
 
 ## [1.1.1] - 2025-08-02
 
@@ -202,6 +248,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## Version History
+
+### [1.1.2] - Export Fix Release (August 4, 2025)
+- Removed `--scale` parameter completely from CLI and API
+- Fixed PNG export "no fit" issue with proper dimension calculations
+- Improved terminal size detection with multiple fallback methods
+- Enhanced volume pane rendering in PNG exports
+- Updated all documentation to remove scale references
 
 ### [1.1.1] - Bug Fix Release (August 2, 2025)
 - Fixed ES module import resolution for global npm installation

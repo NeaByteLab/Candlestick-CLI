@@ -17,6 +17,7 @@ import { truecolor } from '@/utils/core'
  * - Color support for bullish/bearish candles
  * - Volume pane rendering
  * - Y-axis graduations
+ * - Price highlighting and information display
  *
  * @example
  * ```typescript
@@ -38,7 +39,8 @@ export class ChartRenderer {
    *
    * Applies the appropriate color (bullish or bearish) to a candle character
    * based on whether the candle represents an upward or downward price movement.
-   * Uses truecolor ANSI escape sequences for precise color control.
+   * Uses truecolor ANSI escape sequences for precise color control across
+   * different terminal environments.
    *
    * @param candleType - Type of candle (bullish or bearish)
    * @param string - String to colorize
@@ -56,33 +58,11 @@ export class ChartRenderer {
   }
 
   /**
-   * Get terminal dimensions
-   *
-   * Simple terminal size detection using process.stdout.
-   *
-   * @returns Terminal dimensions { width, height }
-   *
-   * @example
-   * ```typescript
-   * const { width, height } = this.getTerminalDimensions()
-   * // Returns { width: 120, height: 30 }
-   * ```
-   */
-  private getTerminalDimensions(): { width: number; height: number } {
-    if (typeof globalThis.process !== 'undefined' && globalThis.process.stdout) {
-      const { columns, rows } = globalThis.process.stdout
-      if (columns && rows && columns > 0 && rows > 0) {
-        return { width: columns, height: rows }
-      }
-    }
-    return { width: 120, height: 30 }
-  }
-
-  /**
    * Render chart content with given candles
    *
    * Separates chart content rendering from terminal size calculations.
-   * Uses CONSTANTS for consistent rendering.
+   * Uses CONSTANTS for consistent rendering and handles volume pane
+   * and information bar display based on chart configuration.
    *
    * @param chart - Chart instance
    * @param candles - Candles to render
@@ -116,99 +96,21 @@ export class ChartRenderer {
   }
 
   /**
-   * Sample candles following Python implementation
+   * Render a single candle
    *
-   * Implements Python's intelligent sampling that preserves important data points.
-   * Prioritizes recent data and significant price movements.
-   *
-   * @param candles - Complete candle dataset
-   * @param targetCount - Target number of candles to show
-   * @returns Sampled candles for display
-   *
-   * @example
-   * ```typescript
-   * const sampled = this.sampleCandles(candles, 120)
-   * // Returns intelligently sampled candles
-   * ```
-   */
-  private sampleCandles(candles: Candles, targetCount: number): Candles {
-    if (candles.length <= targetCount) {
-      return candles
-    }
-    const sampled: Candles = []
-    sampled.push(candles[0])
-    const step = Math.max(1, Math.floor(candles.length / (targetCount - 2)))
-    for (let i = step; i < candles.length - 1; i += step) {
-      if (sampled.length >= targetCount - 1) {
-        break
-      }
-      sampled.push(candles[i])
-    }
-    sampled.push(candles[candles.length - 1])
-    if (sampled.length < targetCount) {
-      this.fillRemainingCandles(sampled, candles, targetCount)
-    }
-    return sampled.slice(0, targetCount)
-  }
-
-  /**
-   * Fill remaining slots with additional candles
-   *
-   * Adds more candles to reach the target count while maintaining chronological order.
-   *
-   * @param sampled - Current sampled candles array
-   * @param candles - Original candle array
-   * @param targetCount - Target number of candles
-   */
-  private fillRemainingCandles(sampled: Candles, candles: Candles, targetCount: number): void {
-    const remaining = targetCount - sampled.length
-    const gapStep = Math.max(1, Math.floor(candles.length / (remaining * 2)))
-    for (let i = gapStep; i < candles.length - 1; i += gapStep) {
-      if (sampled.length >= targetCount) {
-        break
-      }
-      if (!sampled.includes(candles[i])) {
-        const insertIndex = this.findInsertPosition(sampled, candles, i)
-        sampled.splice(insertIndex, 0, candles[i])
-      }
-    }
-  }
-
-  /**
-   * Find correct position to insert candle
-   *
-   * Determines the proper chronological position for inserting a new candle.
-   *
-   * @param sampled - Current sampled candles
-   * @param candles - Original candle array
-   * @param candleIndex - Index of candle to insert
-   * @returns Insert position index
-   */
-  private findInsertPosition(sampled: Candles, candles: Candles, candleIndex: number): number {
-    for (let j = 0; j < sampled.length; j++) {
-      if (candles.indexOf(sampled[j]) > candleIndex) {
-        return j
-      }
-    }
-    return sampled.length
-  }
-
-  /**
-   * Render a single candle at given Y coordinate
-   *
-   * Determines which Unicode character to use for the candle body, wick, or
-   * empty space based on the candle's price data and current Y position.
-   * Implements precise candle rendering with proper body/wick distinction.
+   * Renders one candle at the specified Y position using the Y-axis for price conversion.
+   * Applies appropriate color based on candle type (bullish/bearish) and determines
+   * the correct Unicode character for the candle representation.
    *
    * @param candle - Candle data to render
-   * @param y - Y coordinate (height position)
-   * @param yAxis - Y-axis instance for price-to-height conversion
-   * @returns Colored Unicode character representing the candle at this position
+   * @param y - Y coordinate for rendering
+   * @param yAxis - Y-axis instance for price conversion
+   * @returns Colored candle character string
    *
    * @example
    * ```typescript
    * const candleChar = this.renderCandle(candle, 5, yAxis)
-   * // Returns colored Unicode character for this position
+   * // Returns colored candle character
    * ```
    */
   private renderCandle(candle: Candle, y: number, yAxis: YAxis): string {
@@ -223,7 +125,8 @@ export class ChartRenderer {
    *
    * Analyzes the candle's price data and current Y position to determine
    * the appropriate Unicode character for body, wick, or empty space.
-   * Implements complex logic for accurate candle representation.
+   * Implements complex logic for accurate candle representation and handles
+   * edge cases for proper visual display.
    *
    * @param heightUnit - Current Y coordinate
    * @param highY - High price Y coordinate
@@ -262,7 +165,8 @@ export class ChartRenderer {
    * Render upper part of candle (above body)
    *
    * Handles rendering of the upper wick and top portion of the candle body.
-   * Determines appropriate Unicode characters based on price differences and thresholds.
+   * Determines appropriate Unicode characters based on price differences and thresholds
+   * to create accurate visual representation of the candle's upper portion.
    *
    * @param heightUnit - Current Y coordinate
    * @param highY - High price Y coordinate
@@ -297,7 +201,8 @@ export class ChartRenderer {
    * Render lower part of candle (below body)
    *
    * Handles rendering of the lower wick and bottom portion of the candle body.
-   * Determines appropriate Unicode characters based on price differences and thresholds.
+   * Determines appropriate Unicode characters based on price differences and thresholds
+   * to create accurate visual representation of the candle's lower portion.
    *
    * @param heightUnit - Current Y coordinate
    * @param lowY - Low price Y coordinate
@@ -332,7 +237,8 @@ export class ChartRenderer {
    * Add colored field to labels array
    *
    * Helper method for building colored information fields in the chart labels.
-   * Splits field into label and value, then applies color to the value portion.
+   * Splits field into label and value, then applies color to the value portion
+   * for enhanced visual distinction in the information display.
    *
    * @param parts - Array of label parts to append to
    * @param field - Field string in format "label: value"
@@ -356,7 +262,8 @@ export class ChartRenderer {
    *
    * Creates a formatted information bar with colored statistics including
    * price, highest/lowest values, variation, average, and volume.
-   * Each statistic is color-coded for better visual distinction.
+   * Each statistic is color-coded for better visual distinction and
+   * provides comprehensive market information display.
    *
    * @param chart - Chart instance containing info bar configuration
    * @param stats - Candle set statistics to display
@@ -411,15 +318,15 @@ export class ChartRenderer {
   }
 
   /**
-   * Render the complete chart with dynamic font scaling
+   * Render the complete chart
    *
-   * Generates the complete ASCII chart with dynamic font size adjustment.
-   * More data = smaller font size for optimal display.
-   * Now properly handles async rendering for auto-resize scenarios.
-   * Optimized for smooth re-rendering in watch mode.
+   * Main rendering method that orchestrates the entire chart rendering process.
+   * Handles terminal size detection, candle sampling, and output formatting.
+   * Supports async rendering for large datasets and provides comprehensive
+   * error handling for robust chart display.
    *
-   * @param chart - Chart instance containing all rendering data
-   * @returns Complete ASCII chart string ready for console output
+   * @param chart - Chart instance to render
+   * @returns Promise that resolves to complete chart string
    *
    * @example
    * ```typescript
@@ -428,34 +335,39 @@ export class ChartRenderer {
    * ```
    */
   async render(chart: Chart): Promise<string> {
-    const { chartData } = chart
-    chartData.computeHeight(chart.volumePane.height)
-    const { visibleCandleSet: candleSet } = chartData
-    const { candles } = candleSet
-    const terminalDimensions = this.getTerminalDimensions()
-    const availableWidth =
-      terminalDimensions.width - CONSTANTS.WIDTH - (CONSTANTS.Y_AXIS_ON_THE_RIGHT ? 0 : CONSTANTS.MARGIN_RIGHT)
-    const candlesToShow = Math.min(candles.length, Math.floor(availableWidth * 2.0))
-    const candlesToRender = this.sampleCandles(candles, candlesToShow)
-    return this.renderChartContent(chart, candlesToRender)
+    try {
+      const {
+        chartData: {
+          visibleCandleSet: { candles }
+        }
+      } = chart
+      if (candles.length === 0) {
+        return 'No data available'
+      }
+      return this.renderChartContent(chart, candles)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      throw new Error(`Chart rendering failed: ${errorMessage}`)
+    }
   }
 
   /**
-   * Render the main chart body
+   * Render chart body
    *
-   * Renders all chart lines from top to bottom, including Y-axis labels
-   * and candle representations. Handles both left and right Y-axis positioning.
+   * Renders the main chart area including candles and Y-axis graduations.
+   * Handles both left and right Y-axis positioning and manages the complete
+   * chart display layout with proper line-by-line rendering.
    *
    * @param output - Output string array to append to
    * @param chart - Chart instance with rendering data
    * @param candles - Array of candles to render
    * @param graduationsOnRight - Whether Y-axis is on the right side
    * @param renderLine - Function to render Y-axis line
-   * @param highlights - Price highlights for Y-axis
+   * @param highlights - Chart highlights for price coloring
    *
    * @example
    * ```typescript
-   * this.renderChartBody(output, chart, candles, 2, false, renderLine, highlights)
+   * this.renderChartBody(output, chart, candles, false, renderLine, highlights)
    * ```
    */
   private renderChartBody(
@@ -466,7 +378,10 @@ export class ChartRenderer {
     renderLine: (y: number, highlights: ChartHighlights) => string,
     highlights: ChartHighlights
   ): void {
-    for (let y = chart.chartData.height; y > 0; y--) {
+    const {
+      chartData: { height }
+    } = chart
+    for (let y = height; y > 0; y--) {
       this.renderChartLine(output, chart, candles, graduationsOnRight, renderLine, highlights, y)
     }
   }
@@ -474,20 +389,21 @@ export class ChartRenderer {
   /**
    * Render a single chart line
    *
-   * Renders one horizontal line of the chart including Y-axis labels
-   * and candle characters for all visible candles at this Y position.
+   * Renders one horizontal line of the chart including Y-axis graduations
+   * and candles at the specified Y position. Handles proper positioning
+   * of Y-axis elements and candle rendering for each line.
    *
    * @param output - Output string array to append to
    * @param chart - Chart instance with rendering data
    * @param candles - Array of candles to render
    * @param graduationsOnRight - Whether Y-axis is on the right side
    * @param renderLine - Function to render Y-axis line
-   * @param highlights - Price highlights for Y-axis
+   * @param highlights - Chart highlights for price coloring
    * @param y - Current Y coordinate to render
    *
    * @example
    * ```typescript
-   * this.renderChartLine(output, chart, candles, 2, false, renderLine, highlights, 5)
+   * this.renderChartLine(output, chart, candles, false, renderLine, highlights, 5)
    * ```
    */
   private renderChartLine(
@@ -517,7 +433,8 @@ export class ChartRenderer {
    * Render the volume pane
    *
    * Renders the volume bars below the main chart if volume pane is enabled.
-   * Creates visual representation of trading volume for each candle.
+   * Creates visual representation of trading volume for each candle and
+   * provides additional market analysis information through volume display.
    *
    * @param output - Output string array to append to
    * @param chart - Chart instance with rendering data
@@ -551,7 +468,8 @@ export class ChartRenderer {
    * Render a single volume line
    *
    * Renders one horizontal line of the volume pane including empty space
-   * and volume bars for all visible candles at this Y position.
+   * and volume bars for all visible candles at this Y position. Handles
+   * proper volume scaling and visual representation for each candle.
    *
    * @param output - Output string array to append to
    * @param candles - Array of candles to render volume for

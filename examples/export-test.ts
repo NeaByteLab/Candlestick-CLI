@@ -37,8 +37,7 @@ async function main(): Promise<void> {
       const outputImage = getOutputPaths().image.replace('.png', `-${background}.png`)
       await exportToImage(chart, {
         outputPath: outputImage,
-        background,
-        scale: EXAMPLE_CONFIG.DEFAULT_SCALE
+        background
       })
       console.log(`✓ ${background} image export completed: ${outputImage}`)
     }

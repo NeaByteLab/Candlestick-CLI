@@ -41,7 +41,7 @@ candlestick-cli [options]
 | `--timeframe` | - | Timeframe for live data | 1h | `--timeframe 4h` |
 | `--limit` | - | Number of candles to fetch | 1000 | `--limit 200` |
 | `--output` | `-o` | Export chart to file | - | `-o chart.png` |
-| `--scale` | - | Scale factor for image export | 1 | `--scale 2` |
+
 | `--background` | - | Background theme for export | dark | `--background light` |
 | `--watch` | - | Enable watch mode for live updates | false | `--watch` |
 | `--interval` | - | Update interval in seconds (watch mode) | 30 | `--interval 10` |
@@ -123,11 +123,10 @@ Export chart as high-quality PNG image:
 
 ```bash
 candlestick-cli -f data.csv -o chart.png
-candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
+candlestick-cli -s BTC/USDT -o chart.png --background light
 ```
 
 **Image Export Options:**
-- `--scale <number>` - Scale factor (1-4, default: 1)
 - `--background <theme>` - Background theme: light or dark (default: dark)
 
 ## 🔄 Watch Mode
@@ -227,11 +226,11 @@ candlestick-cli -f data.csv -o chart.txt
 candlestick-cli -s BTC/USDT -o chart.txt
 
 # PNG export
-candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
-candlestick-cli -f data.csv -o chart.png --scale 1.5 --background dark
+candlestick-cli -s BTC/USDT -o chart.png --background light
+candlestick-cli -f data.csv -o chart.png --background dark
 
 # High-quality export
-candlestick-cli -s ETH/USDT -o chart.png --scale 3 --background light
+candlestick-cli -s ETH/USDT -o chart.png --background light
 ```
 
 ## ⚠️ Limits and Constraints
@@ -247,5 +246,5 @@ candlestick-cli -s ETH/USDT -o chart.png --scale 3 --background light
 1. **Auto-sizing:** Use `width: 0` and `height: 0` for automatic terminal size detection
 2. **Volume pane:** Default height is 8, can be customized with `--volume-height`
 3. **Watch mode:** Press `Ctrl+C` to stop watching
-4. **Export quality:** Use higher scale values (2-4) for better image quality
+4. **Export quality:** PNG exports are automatically optimized for best quality
 5. **Perpetual futures:** Use `:USDT` suffix for perpetual contracts 

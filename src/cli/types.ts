@@ -43,8 +43,7 @@ export interface CliOptions {
   volumeHeight?: number
   /** Output file path for export */
   output?: string
-  /** Scale factor for image export */
-  scale?: number
+
   /** Background theme for image export */
   background?: 'light' | 'dark'
   /** Watch mode for live data updates */

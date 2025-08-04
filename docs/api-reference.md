@@ -144,7 +144,6 @@ Export chart to PNG image with customizable settings.
 interface ExportOptions {
   outputPath: string
   background?: 'light' | 'dark'  // Background theme (default: 'dark')
-  scale?: number                  // Scale factor (default: 1)
 }
 ```
 
@@ -154,8 +153,7 @@ import { exportToImage } from '@neabyte/candlestick-cli'
 
 await exportToImage(chart, {
   outputPath: 'chart.png',
-  background: 'light',
-  scale: 2
+  background: 'light'
 })
 ```
 
@@ -360,7 +358,6 @@ Export configuration options.
 interface ExportOptions {
   outputPath: string
   background?: 'light' | 'dark'
-  scale?: number
 }
 ```
 

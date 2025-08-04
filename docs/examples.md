@@ -29,10 +29,10 @@ This document provides comprehensive examples for using Candlestick-CLI.
 **Commands used:**
 ```bash
 # Dark mode export
-candlestick-cli -s BTC/USDT --timeframe 4h --limit 200 -o example-dark.png --background dark --scale 2
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200 -o example-dark.png --background dark
 
 # Light mode export  
-candlestick-cli -s BTC/USDT --timeframe 4h --limit 200 -o example-light.png --background light --scale 2
+candlestick-cli -s BTC/USDT --timeframe 4h --limit 200 -o example-light.png --background light
 ```
 
 **Text Export Example:**
@@ -442,8 +442,8 @@ candlestick-cli -f data.csv -o chart.txt
 candlestick-cli -s BTC/USDT -o chart.txt
 
 # PNG export
-candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
-candlestick-cli -f data.csv -o chart.png --scale 1.5 --background dark
+candlestick-cli -s BTC/USDT -o chart.png --background light
+candlestick-cli -f data.csv -o chart.png --background dark
 ```
 
 ### Complete Example

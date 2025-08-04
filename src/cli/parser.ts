@@ -34,7 +34,6 @@ export async function parseArgs(): Promise<CliOptions> {
     height: 0,
     volume: true,
     volumeHeight: 8,
-    scale: 1,
     background: 'dark',
     watch: false,
     interval: 30
@@ -101,9 +100,6 @@ export async function parseArgs(): Promise<CliOptions> {
       case '-o':
         options.output = nextArg
         break
-      case '--scale':
-        options.scale = parseFloat(nextArg)
-        break
       case '--background':
         options.background = nextArg as 'light' | 'dark'
         break
@@ -160,7 +156,7 @@ Watch Mode (Live Data):
 
 Export Options:
   -o, --output <path>         Export chart to file (PNG, TXT)
-  --scale <number>            Scale factor for image export (default: 1)
+
   --background <theme>        Background theme: light or dark (default: dark)
 
 Other:
@@ -185,9 +181,9 @@ Examples:
   candlestick-cli -s ETH/USDT:USDT --timeframe 15m --limit 300
   
   # Export examples
-  candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
+  candlestick-cli -s BTC/USDT -o chart.png --background light
   candlestick-cli -f data.csv -o chart.txt
-  candlestick-cli -s ETH/USDT -o chart.png --scale 1.5 --background dark
+  candlestick-cli -s ETH/USDT -o chart.png --background dark
 
 File Formats:
   CSV: Should have columns: open,high,low,close,volume,timestamp

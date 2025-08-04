@@ -16,7 +16,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@/chart/*": ["src/chart/*"],
       "@core/*": ["src/core/*"],
       "@types/*": ["src/types/*"],
       "@utils/*": ["src/utils/*"]
@@ -38,7 +37,10 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "removeComments": true,
+    "importHelpers": true,
+    "importsNotUsedAsValues": "remove"
   },
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]

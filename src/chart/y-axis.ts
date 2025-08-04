@@ -117,8 +117,21 @@ export class YAxis {
     const { visibleCandleSet } = chartData
     const { minPrice: minValue, maxPrice: maxValue } = visibleCandleSet
     const { height } = chartData
-    const cellMinLength = CONSTANTS.CHAR_PRECISION + CONSTANTS.DEC_PRECISION + 1
     const formatPrice = (value: number): string => roundPrice(value)
+    const allPrices = []
+    for (let i = 1; i <= height; i++) {
+      let price: string
+      if (i === height) {
+        price = formatPrice(maxValue)
+      } else if (i === 1) {
+        price = formatPrice(minValue)
+      } else {
+        const interpolatedValue = minValue + ((i - 1) * (maxValue - minValue)) / (height - 1)
+        price = formatPrice(interpolatedValue)
+      }
+      allPrices.push(price)
+    }
+    const maxPriceWidth = Math.max(...allPrices.map(p => p.length))
     let price: string
     if (y === height) {
       price = formatPrice(maxValue)
@@ -147,9 +160,10 @@ export class YAxis {
       customColor = targetColor
       break
     }
+    const paddedPrice = price.padStart(maxPriceWidth)
     const priceStr = CONSTANTS.Y_AXIS_ON_THE_RIGHT
-      ? ` ${color(`${CONSTANTS.UNICODE_Y_AXIS_RIGHT} ${price.padEnd(cellMinLength)}`, customColor)}`
-      : `${color(`${price.padEnd(cellMinLength)} ${CONSTANTS.UNICODE_Y_AXIS_LEFT}`, customColor)}${' '.repeat(CONSTANTS.MARGIN_RIGHT)}`
+      ? ` ${color(`${CONSTANTS.UNICODE_Y_AXIS_RIGHT} ${paddedPrice}`, customColor)}`
+      : `${color(`${paddedPrice} ${CONSTANTS.UNICODE_Y_AXIS_LEFT}`, customColor)}${' '.repeat(CONSTANTS.MARGIN_RIGHT)}`
     return [hasSpecialPrice, priceStr]
   }
 
@@ -175,10 +189,29 @@ export class YAxis {
       const [, price] = this.renderPrice(y, highlights)
       return price
     }
+    const { chartData } = this
+    const { visibleCandleSet } = chartData
+    const { minPrice: minValue, maxPrice: maxValue } = visibleCandleSet
+    const { height } = chartData
+    const formatPrice = (value: number): string => roundPrice(value)
+    const allPrices = []
+    for (let i = 1; i <= height; i++) {
+      let price: string
+      if (i === height) {
+        price = formatPrice(maxValue)
+      } else if (i === 1) {
+        price = formatPrice(minValue)
+      } else {
+        const interpolatedValue = minValue + ((i - 1) * (maxValue - minValue)) / (height - 1)
+        price = formatPrice(interpolatedValue)
+      }
+      allPrices.push(price)
+    }
+    const maxPriceWidth = Math.max(...allPrices.map(p => p.length))
     if (CONSTANTS.Y_AXIS_ON_THE_RIGHT) {
       return ` ${CONSTANTS.UNICODE_Y_AXIS}`
     }
-    const cell = ' '.repeat(CONSTANTS.CHAR_PRECISION + CONSTANTS.DEC_PRECISION + 2)
+    const cell = ' '.repeat(maxPriceWidth + 1)
     const margin = ' '.repeat(CONSTANTS.MARGIN_RIGHT)
     return `${cell}${CONSTANTS.UNICODE_Y_AXIS}${margin}`
   }

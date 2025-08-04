@@ -39,7 +39,7 @@ export function showAsciiHeader(): void {
  *
  * @example
  * ```typescript
- * await handleChartOutput(chart, { output: 'chart.png', scale: 2 })
+ * await handleChartOutput(chart, { output: 'chart.png' })
  * await handleChartOutput(chart, { output: 'chart.txt' })
  * ```
  */
@@ -47,9 +47,6 @@ export async function handleChartOutput(chart: Chart, options: CliOptions): Prom
   if (options.output) {
     const { exportToText, exportToImage } = await import('@/utils/export')
     const exportOptions: Partial<ExportOptions> = {}
-    if (options.scale !== undefined) {
-      exportOptions.scale = options.scale
-    }
     if (options.background !== undefined) {
       exportOptions.background = options.background
     }

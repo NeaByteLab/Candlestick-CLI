@@ -106,10 +106,10 @@ candlestick-cli -s BTC/USDT:USDT --timeframe 1h --limit 150
 candlestick-cli -s BTC/USDT --watch --interval 30
 
 # Export chart as PNG image (dark theme)
-candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background dark
+candlestick-cli -s BTC/USDT -o chart.png --background dark
 
 # Export chart as PNG image (light theme)
-candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
+candlestick-cli -s BTC/USDT -o chart.png --background light
 
 # Export chart as text file
 candlestick-cli -f data.csv -o chart.txt
@@ -122,7 +122,7 @@ candlestick-cli -s BTC/USDT --timeframe 1m --limit 100
 candlestick-cli -s BTC/USDT --timeframe 15m --limit 200
 candlestick-cli -s BTC/USDT --timeframe 1d --limit 50
 
-**Note**: Export dimensions are automatically optimized based on data length for precision.
+**Note**: Export dimensions are automatically optimized for best quality.
 ```
 
 #### Local Installation

@@ -52,7 +52,7 @@ candlestick-cli -s BTC/USDT --timeframe 4h --limit 200
 candlestick-cli -s BTC/USDT --watch --interval 30
 
 # Export to PNG
-candlestick-cli -s BTC/USDT -o chart.png --scale 2 --background light
+candlestick-cli -s BTC/USDT -o chart.png --background light
 
 # Export to text
 candlestick-cli -f data.csv -o chart.txt

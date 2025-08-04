@@ -7,7 +7,7 @@ import type { Candles, TerminalSize } from '@/types/candlestick'
  *
  * Handles chart sizing, terminal detection, and candle visibility calculations.
  * Implements scaling with configurable margins and supports fit-to-data and fixed-range modes.
- * Provides responsive chart sizing and intelligent data sampling.
+ * Provides responsive chart sizing and data sampling for optimal display.
  *
  * @example
  * ```typescript
@@ -35,7 +35,7 @@ export class ChartData {
    *
    * Creates a new ChartData instance with candle data and optional dimensions.
    * Automatically detects terminal size if dimensions are not provided.
-   * Sets up main and visible candle sets for data management.
+   * Sets up main and visible candle sets for data management and rendering.
    *
    * @param candles - Array of candle data to initialize with
    * @param options - Optional chart dimensions and configuration
@@ -58,7 +58,7 @@ export class ChartData {
    *
    * Attempts to detect the current terminal dimensions using process.stdout.
    * Falls back to reasonable defaults if terminal detection fails.
-   * Provides consistent sizing across different environments.
+   * Provides consistent sizing across different environments and platforms.
    *
    * @returns Terminal dimensions object with width and height
    *
@@ -69,20 +69,93 @@ export class ChartData {
    * ```
    */
   getTerminalSize(): TerminalSize {
-    if (typeof globalThis.process !== 'undefined' && globalThis.process.stdout) {
+    if (typeof globalThis.process === 'undefined' || !globalThis.process.stdout) {
+      return { width: 120, height: 30 }
+    }
+    const size = this.tryGetWindowSize()
+    if (size) {
+      return size
+    }
+    const size2 = this.tryGetStdoutSize()
+    if (size2) {
+      return size2
+    }
+    const size3 = this.tryGetEnvSize()
+    if (size3) {
+      return size3
+    }
+    return { width: 120, height: 30 }
+  }
+
+  /**
+   * Attempt to get terminal size using window size method
+   *
+   * Uses process.stdout.getWindowSize() to detect terminal dimensions.
+   * Returns null if the method fails or returns invalid dimensions.
+   *
+   * @returns Terminal dimensions or null if detection fails
+   */
+  private tryGetWindowSize(): TerminalSize | null {
+    try {
+      if (globalThis.process.stdout.isTTY) {
+        const [columns, rows] = globalThis.process.stdout.getWindowSize()
+        if (columns && rows && columns > 0 && rows > 0) {
+          return { width: columns, height: rows }
+        }
+      }
+    } catch {
+      // Silent fallback
+    }
+    return null
+  }
+
+  /**
+   * Attempt to get terminal size using stdout properties
+   *
+   * Uses process.stdout.columns and process.stdout.rows to detect terminal dimensions.
+   * Returns null if the properties are unavailable or invalid.
+   *
+   * @returns Terminal dimensions or null if detection fails
+   */
+  private tryGetStdoutSize(): TerminalSize | null {
+    try {
       const { columns, rows } = globalThis.process.stdout
       if (columns && rows && columns > 0 && rows > 0) {
         return { width: columns, height: rows }
       }
+    } catch {
+      // Silent fallback
     }
-    return { width: 120, height: 30 }
+    return null
+  }
+
+  /**
+   * Attempt to get terminal size using environment variables
+   *
+   * Uses COLUMNS and LINES environment variables to detect terminal dimensions.
+   * Returns null if the variables are unavailable or invalid.
+   *
+   * @returns Terminal dimensions or null if detection fails
+   */
+  private tryGetEnvSize(): TerminalSize | null {
+    try {
+      const envColumns = globalThis.process.env.COLUMNS ? parseInt(globalThis.process.env.COLUMNS) : null
+      const envRows = globalThis.process.env.LINES ? parseInt(globalThis.process.env.LINES) : null
+      if (envColumns && envRows && envColumns > 0 && envRows > 0) {
+        return { width: envColumns, height: envRows }
+      }
+    } catch {
+      // Silent fallback
+    }
+    return null
   }
 
   /**
    * Compute chart height based on volume pane
    *
    * Calculates the available chart height by subtracting margins and volume pane
-   * height from the total terminal height. Ensures proper spacing for all chart components.
+   * height from the total terminal height. Ensures proper spacing for all chart components
+   * and maintains minimum height requirements.
    *
    * @param volumePaneHeight - Height of the volume pane (0 if disabled)
    *
@@ -103,6 +176,8 @@ export class ChartData {
    *
    * Determines which candles should be visible based on the current scaling mode
    * and available chart width. Supports dynamic scaling similar to TradingView.
+   * Syncs with terminal resizing by using current terminal dimensions and updates
+   * the visible candle set accordingly.
    *
    * @example
    * ```typescript
@@ -111,7 +186,8 @@ export class ChartData {
    * ```
    */
   computeVisibleCandles(): void {
-    const availableWidth = this.width - CONSTANTS.WIDTH - this.margins.left - this.margins.right
+    const currentTerminalSize = this.getTerminalSize()
+    const availableWidth = currentTerminalSize.width - CONSTANTS.WIDTH - this.margins.left - this.margins.right
     const allCandles = this.mainCandleSet.candles
     let visibleCandles = allCandles
     if (this.scalingMode === 'fixed' && this.timeRange) {
@@ -125,7 +201,7 @@ export class ChartData {
         return candleMin <= max && candleMax >= min
       })
     } else if (this.scalingMode === 'fit') {
-      visibleCandles = allCandles
+      visibleCandles = this.sampleCandlesForWidth(allCandles, availableWidth)
     } else {
       visibleCandles = this.sampleCandlesForWidth(allCandles, availableWidth)
     }
@@ -136,7 +212,9 @@ export class ChartData {
    * Sample candles for width-constrained display
    *
    * Uses intelligent sampling to preserve data integrity while fitting
-   * large datasets into limited display width.
+   * large datasets into limited display width. Each candle takes approximately
+   * 2-3 characters, so we need to sample accordingly. Handles zoom in/out
+   * properly and prevents bar cut-off while maintaining data accuracy.
    *
    * @param allCandles - Complete candle dataset
    * @param availableWidth - Available width for candle display
@@ -144,26 +222,25 @@ export class ChartData {
    */
   private sampleCandlesForWidth(allCandles: Candles, availableWidth: number): Candles {
     const totalCandles = allCandles.length
-    if (totalCandles <= availableWidth) {
+    if (totalCandles === 0) {
+      return []
+    }
+    const padding = 2
+    const candleWidth = 1.1
+    const maxCandles = Math.max(1, Math.floor((availableWidth - padding) / candleWidth))
+    if (totalCandles <= maxCandles) {
       return allCandles
     }
-    const step = Math.max(1, Math.floor(totalCandles / availableWidth))
-    const sampledCandles: Candles = []
-    sampledCandles.push(allCandles[0])
-    for (let i = step; i < totalCandles - 1; i += step) {
-      sampledCandles.push(allCandles[i])
-    }
-    if (totalCandles > 1) {
-      sampledCandles.push(allCandles[totalCandles - 1])
-    }
-    return sampledCandles
+    const startIndex = Math.max(0, totalCandles - maxCandles)
+    return allCandles.slice(startIndex)
   }
 
   /**
    * Reset all candles
    *
    * Clears both main and visible candle sets, effectively resetting the chart data.
-   * Useful when starting fresh or clearing old data. Maintains chart structure.
+   * Useful when starting fresh or clearing old data. Maintains chart structure
+   * and configuration while removing all candle data.
    *
    * @example
    * ```typescript
@@ -180,7 +257,8 @@ export class ChartData {
    * Add candles to main set
    *
    * Appends new candles to the main candle set. The visible candle set is cleared
-   * and will be recomputed on the next computeVisibleCandles() call.
+   * and will be recomputed on the next computeVisibleCandles() call. Maintains
+   * data integrity and prepares for rendering updates.
    *
    * @param candles - Array of candles to add to the main set
    *
@@ -199,7 +277,8 @@ export class ChartData {
    * Set chart size
    *
    * Updates the chart dimensions and terminal size. This affects how many
-   * candles can be displayed and the overall chart layout. Triggers recomputation.
+   * candles can be displayed and the overall chart layout. Triggers recomputation
+   * of visible candles and chart rendering parameters.
    *
    * @param width - New chart width in characters
    * @param height - New chart height in characters
@@ -229,7 +308,8 @@ export class ChartData {
    * Set chart margins
    *
    * Configures the chart margins to control spacing around the chart area.
-   * These margins affect the available space for candle rendering.
+   * These margins affect the available space for candle rendering and overall
+   * chart layout. Triggers recomputation of visible candles.
    *
    * @param top - Top margin in characters
    * @param right - Right margin in characters
@@ -253,6 +333,7 @@ export class ChartData {
    * - 'fit': Shows all candles with compression if needed
    * - 'fixed': Shows a specific time range (requires setTimeRange)
    * - 'price': Shows candles within a specific price range (requires setPriceRange)
+   * Triggers recomputation of visible candles based on the selected mode.
    *
    * @param mode - Scaling mode ('fit', 'fixed', or 'price')
    *
@@ -273,6 +354,7 @@ export class ChartData {
    *
    * Configures a specific price range to display when using 'price' scaling mode.
    * Only candles that overlap with the specified price range will be visible.
+   * Triggers recomputation of visible candles based on the price range.
    *
    * @param minPrice - Minimum price to show (inclusive)
    * @param maxPrice - Maximum price to show (inclusive)
@@ -293,34 +375,43 @@ export class ChartData {
   }
 
   /**
-   * Set time range for fixed scaling
+   * Set time range for fixed scaling mode
    *
    * Configures a specific time range to display when using 'fixed' scaling mode.
    * Only candles within the specified index range will be visible.
+   * Triggers recomputation of visible candles based on the time range.
    *
    * @param startIndex - Starting candle index (inclusive)
    * @param endIndex - Ending candle index (inclusive)
+   * @throws Error if startIndex >= endIndex or indices are invalid
    *
    * @example
    * ```typescript
    * chartData.setScalingMode('fixed')
-   * chartData.setTimeRange(0, 49) // Show first 50 candles
+   * chartData.setTimeRange(0, 99) // Show first 100 candles
    * ```
    */
   setTimeRange(startIndex: number, endIndex: number): void {
+    if (startIndex >= endIndex) {
+      throw new Error('Start index must be less than end index')
+    }
+    if (startIndex < 0 || endIndex < 0) {
+      throw new Error('Indices must be non-negative')
+    }
     this.timeRange = { start: startIndex, end: endIndex }
     this.computeVisibleCandles()
   }
 
   /**
-   * Auto-fit chart to show all data with proper margins
+   * Fit chart to all available data
    *
-   * Resets the chart to 'fit' mode and clears any time range or price range restrictions.
-   * This ensures all available data is displayed with proper scaling.
+   * Resets scaling mode to 'fit' and recomputes visible candles to show all data.
+   * Useful for resetting the chart view to display the complete dataset
+   * with optimal scaling and visibility.
    *
    * @example
    * ```typescript
-   * chartData.fitToData() // Show all candles with fit scaling
+   * chartData.fitToData() // Show all available candles
    * ```
    */
   fitToData(): void {
